@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Pencil, Upload } from 'lucide-react'
-import Layout from '../components/Layout'
-import StatusBadge from '../components/StatusBadge'
-import { getStudentById } from '../services/studentService'
+import Layout from '../../components/Layout'
+import StatusBadge from '../../components/StatusBadge'
+import { getStudentById } from '../../services/studentService'
 
 export default function StudentDetail() {
   const { id } = useParams()

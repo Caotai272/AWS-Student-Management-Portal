@@ -1,12 +1,14 @@
 // src/components/Sidebar.jsx
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, FileText, Bell, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, FileText, Bell, Settings, LogOut } from 'lucide-react'
 import { logout } from '../services/authService'
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/students', label: 'Students', icon: Users },
-  { to: '/documents/upload', label: 'Documents', icon: FileText },
+  { to: '/teachers', label: 'Teachers', icon: GraduationCap },
+  { to: '/grades', label: 'Grades', icon: FileText },
+  { to: '/materials', label: 'Materials', icon: FileText },
   { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/settings', label: 'Settings', icon: Settings }
 ]

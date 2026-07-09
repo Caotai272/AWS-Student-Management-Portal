@@ -1,8 +1,8 @@
 // src/pages/UploadDocument.jsx
 import { useState } from 'react'
 import { Upload, FileText } from 'lucide-react'
-import Layout from '../components/Layout'
-import { createUploadUrl, saveDocumentMetadata } from '../services/documentService'
+import Layout from '../../components/Layout'
+import { createUploadUrl, saveDocumentMetadata } from '../../services/documentService'
 
 const DOC_TYPES = [
   { value: 'transcript', label: 'Bảng điểm' },
