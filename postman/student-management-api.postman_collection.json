@@ -1,0 +1,127 @@
+{
+  "info": {
+    "name": "Student Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{apiUrl}}/auth/login",
+              "host": ["{{apiUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"your-username\",\n  \"password\": \"your-password\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "List Students",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{apiUrl}}/students", "host": ["{{apiUrl}}"], "path": ["students"] }
+          }
+        },
+        {
+          "name": "Get Student By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{apiUrl}}/students/:id", "host": ["{{apiUrl}}"], "path": ["students", ":id"] }
+          }
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{apiUrl}}/students", "host": ["{{apiUrl}}"], "path": ["students"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"S001\",\n  \"fullName\": \"Nguyen Van A\",\n  \"email\": \"a@student.edu.vn\",\n  \"phone\": \"0123456789\",\n  \"major\": \"CNTT\",\n  \"gpa\": 3.5\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{apiUrl}}/students/:id", "host": ["{{apiUrl}}"], "path": ["students", ":id"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Nguyen Van A Updated\",\n  \"gpa\": 3.7\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{apiUrl}}/students/:id", "host": ["{{apiUrl}}"], "path": ["students", ":id"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Create Upload URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{apiUrl}}/documents/upload-url", "host": ["{{apiUrl}}"], "path": ["documents", "upload-url"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"thesis.pdf\",\n  \"contentType\": \"application/pdf\",\n  \"studentId\": \"S001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Save Document Metadata",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{apiUrl}}/documents/metadata", "host": ["{{apiUrl}}"], "path": ["documents", "metadata"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"S001\",\n  \"fileName\": \"thesis.pdf\",\n  \"s3Key\": \"documents/S001/thesis.pdf\",\n  \"fileUrl\": \"https://<bucket>.s3.amazonaws.com/documents/S001/thesis.pdf\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "apiUrl", "value": "https://your-api-id.execute-api.ap-southeast-1.amazonaws.com/prod" },
+    { "key": "idToken", "value": "YOUR_COGNITO_ID_TOKEN" }
+  ]
+}

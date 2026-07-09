@@ -1,0 +1,16 @@
+{
+  "name": "aws-student-management-portal-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AWS Lambda functions (Node.js) for Student Management Portal",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.515.0",
+    "@aws-sdk/lib-dynamodb": "^3.515.0",
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/s3-request-presigner": "^3.515.0",
+    "@aws-sdk/client-sqs": "^3.515.0",
+    "@aws-sdk/client-ses": "^3.515.0",
+    "uuid": "^9.0.1"
+  }
+}
