@@ -4,8 +4,8 @@
 export const awsConfig = {
   Auth: {
     Cognito: {
-      userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || 'YOUR_USER_POOL_ID',
-      userPoolClientId: import.meta.env.VITE_COGNITO_CLIENT_ID || 'YOUR_APP_CLIENT_ID',
+      userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || 'us-east-1_7SwNQ0qYm',
+      userPoolClientId: import.meta.env.VITE_COGNITO_CLIENT_ID || '6o5g3hcus9ehbmk90acqeuplau',
       loginWith: {
         email: true
       }

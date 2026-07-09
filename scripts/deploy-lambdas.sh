@@ -46,13 +46,32 @@ FUNCS=(
 deploy_one () {
   local dir=$1 name=$2 env=$3
   echo "→ Deploy $name ..."
-  ( cd "backend/$dir" && npm install --omit=dev >/dev/null 2>&1 && zip -r -q /tmp/$name.zip . )
+  # Đóng gói từ backend root: bao gồm common/ (shared) + node_modules (dep)
+  # và thư mục function, sao cho import '../../common' và '@aws-sdk/*' hoạt động
+  # trong Lambda. Handler sẽ là <dir>/index.handler.
+  local pkg="/tmp/pkg_$name"
+  rm -rf "$pkg"; mkdir -p "$pkg/$dir"
+  cp -r "backend/common" "$pkg/common"
+  cp -r "backend/node_modules" "$pkg/node_modules"
+  cp -r "backend/$dir/." "$pkg/$dir"
+  # Nén thành zip (dùng đường dẫn Windows tuyệt đối vì aws cli trên Windows
+  # không đọc được /tmp kiểu POSIX). Dùng 7z nếu có, fallback python.
+  local zipwin
+  zipwin="$(cygpath -w "$TEMP" 2>/dev/null)/$name.zip"
+  [ -z "$zipwin" ] && zipwin="$TEMP\\$name.zip"
+  rm -f "$zipwin"
+  if [ -f "/c/Program Files/7-Zip/7z.exe" ]; then
+    ( cd "$pkg" && "/c/Program Files/7-Zip/7z.exe" a -tzip -r "$zipwin" . >/dev/null )
+  else
+    python -c "import shutil; shutil.make_archive('$TEMP/$name','zip','$pkg')"
+    zipwin="$TEMP\\$name.zip"
+  fi
   if aws lambda get-function --function-name "$name" --region "$REGION" >/dev/null 2>&1; then
-    aws lambda update-function-code --function-name "$name" --zip-file fileb:///tmp/$name.zip --region "$REGION" >/dev/null
+    aws lambda update-function-code --function-name "$name" --zip-file "fileb://$zipwin" --region "$REGION" >/dev/null
     aws lambda update-function-configuration --function-name "$name" --environment "Variables=$env" --region "$REGION" >/dev/null
   else
-    aws lambda create-function --function-name "$name" --runtime "$RUNTIME" --handler index.handler \
-      --role "$ROLE" --zip-file fileb:///tmp/$name.zip --environment "Variables=$env" --region "$REGION" >/dev/null
+    aws lambda create-function --function-name "$name" --runtime "$RUNTIME" --handler "${dir}/index.handler" \
+      --role "$ROLE" --zip-file "fileb://$zipwin" --environment "Variables=$env" --region "$REGION" >/dev/null
   fi
   echo "✓ $name"
 }

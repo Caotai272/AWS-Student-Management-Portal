@@ -1,6 +1,6 @@
 // src/services/authService.js
 // Các hàm xác thực với Cognito thông qua AWS Amplify.
-import { signIn, signOut, getCurrentUser, fetchUserAttributes } from 'aws-amplify/auth'
+import { signIn, signOut, fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth'
 
 export const login = async (username, password) => {
   const user = await signIn({ username, password })
@@ -15,11 +15,14 @@ export const logout = async () => {
 
 export const getSessionTokens = async () => {
   // Lưu token từ session hiện tại để gọi API Gateway.
-  const session = await getCurrentUser()
-  const tokens = session.tokens
-  if (tokens) {
-    localStorage.setItem('idToken', tokens.idToken.toString())
-    localStorage.setItem('accessToken', tokens.accessToken.toString())
+  // Amplify v6: dùng fetchAuthSession() để lấy tokens (getCurrentUser
+  // chỉ trả về {username, userId, signInDetails}, KHÔNG có tokens).
+  const session = await fetchAuthSession()
+  const idToken = session.tokens?.idToken?.toString()
+  const accessToken = session.tokens?.accessToken?.toString()
+  if (idToken) {
+    localStorage.setItem('idToken', idToken)
+    localStorage.setItem('accessToken', accessToken)
   }
   return session
 }
