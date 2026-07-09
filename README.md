@@ -138,7 +138,7 @@ Frontend yêu cầu upload file
 → Lambda lưu metadata hồ sơ vào DynamoDB
 ```
 
-#### Luồng gửi email thông báo
+####Luồng gửi email thông báo
 
 ```text
 Lambda Student Service
