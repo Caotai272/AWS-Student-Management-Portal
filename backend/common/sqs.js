@@ -1,7 +1,7 @@
 // common/sqs.js
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 
-const sqs = new SQSClient({ region: process.env.AWS_REGION || 'ap-southeast-1' })
+const sqs = new SQSClient({ region: process.env.AWS_REGION || 'us-east-1' })
 const QUEUE_URL = process.env.NOTIFICATION_QUEUE_URL || ''
 
 export const sendMessage = async (messageBody) => {

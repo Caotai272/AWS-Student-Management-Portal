@@ -2,7 +2,7 @@
 // Lambda worker được kích hoạt bởi SQS (event source) để gửi email qua SES.
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
-const ses = new SESClient({ region: process.env.AWS_REGION || 'ap-southeast-1' })
+const ses = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' })
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@example.com'
 
 async function sendEmail(to, subject, bodyText) {

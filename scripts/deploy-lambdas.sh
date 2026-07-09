@@ -54,6 +54,14 @@ deploy_one () {
   cp -r "backend/common" "$pkg/common"
   cp -r "backend/node_modules" "$pkg/node_modules"
   cp -r "backend/$dir/." "$pkg/$dir"
+  # Copy package.json gốc vào root của gói để Lambda hiểu code là ESM
+  # ("type":"module" trong backend/package.json). Thiếu file này Lambda báo
+  # "Cannot use import statement outside a module".
+  cp "backend/package.json" "$pkg/package.json"
+  # Đảm bảo AWS_REGION luôn được set rõ ràng (tránh default sai region
+  # local env_full="$env"  (AWS_REGION là reserved key nên không set tay;
+  # region đã được fix cứng mặc định us-east-1 trong common/*.js)
+  local env_full="$env"
   # Nén thành zip (dùng đường dẫn Windows tuyệt đối vì aws cli trên Windows
   # không đọc được /tmp kiểu POSIX). Dùng 7z nếu có, fallback python.
   local zipwin
@@ -66,12 +74,22 @@ deploy_one () {
     python -c "import shutil; shutil.make_archive('$TEMP/$name','zip','$pkg')"
     zipwin="$TEMP\\$name.zip"
   fi
+  # update-function-configuration KHÔNG set AWS_REGION (reserved key).
+  # Do Lambda có giới hạn 1 update đồng thời, thêm retry/backoff nhẹ.
+  deploy_cfg () {
+    local fn=$1 tries=0
+    until aws lambda update-function-configuration --function-name "$fn" \
+        --environment "Variables=$env_full" --region "$REGION" >/dev/null 2>&1; do
+      tries=$((tries+1)); [ $tries -ge 5 ] && { echo "  ! skip cfg $fn"; return 1; }
+      sleep 5
+    done
+  }
   if aws lambda get-function --function-name "$name" --region "$REGION" >/dev/null 2>&1; then
     aws lambda update-function-code --function-name "$name" --zip-file "fileb://$zipwin" --region "$REGION" >/dev/null
-    aws lambda update-function-configuration --function-name "$name" --environment "Variables=$env" --region "$REGION" >/dev/null
+    deploy_cfg "$name"
   else
     aws lambda create-function --function-name "$name" --runtime "$RUNTIME" --handler "${dir}/index.handler" \
-      --role "$ROLE" --zip-file "fileb://$zipwin" --environment "Variables=$env" --region "$REGION" >/dev/null
+      --role "$ROLE" --zip-file "fileb://$zipwin" --environment "Variables=$env_full" --region "$REGION" >/dev/null
   fi
   echo "✓ $name"
 }

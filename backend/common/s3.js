@@ -3,7 +3,7 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
-const s3 = new S3Client({ region: process.env.AWS_REGION || 'ap-southeast-1' })
+const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' })
 const BUCKET = process.env.DOCUMENTS_BUCKET || 'student-documents'
 
 export const getUploadSignedUrl = (key, contentType, expiresIn = 300) =>

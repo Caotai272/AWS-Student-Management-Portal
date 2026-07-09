@@ -108,12 +108,14 @@ User Browser
 #### Luồng đăng nhập
 
 ```text
-User nhập tài khoản
-→ Frontend gửi thông tin đăng nhập đến Cognito
+User nhập tài khoản (email + password)
+→ Frontend gửi đến Cognito via AWS Amplify (signIn)
 → Cognito xác thực
-→ Cognito trả về JWT Token
-→ Frontend lưu token để gọi API
+→ Amplify trả về session; frontend lấy idToken qua fetchAuthSession()
+→ Frontend lưu idToken (localStorage) để gọi API
 ```
+
+> Lưu ý thực tế: Amplify v6 dùng `fetchAuthSession()` (không phải `getCurrentUser()`) để lấy JWT.
 
 #### Luồng quản lý sinh viên
 
@@ -138,15 +140,18 @@ Frontend yêu cầu upload file
 → Lambda lưu metadata hồ sơ vào DynamoDB
 ```
 
-####Luồng gửi email thông báo
+#### Luồng gửi email thông báo (bất đồng bộ)
 
 ```text
-Lambda Student Service
-→ Gửi message vào SQS
-→ Lambda Notification Worker đọc message
+Lambda xử lý nghiệp vụ (Student/Document)
+→ Gửi message vào SQS (sendEmailWorker được trigger qua SQS event source mapping)
+→ Lambda Notification Worker đọc message từ SQS
 → Gửi email bằng SES
 → Ghi log vào CloudWatch
 ```
+
+> Thực tế: Lambda `sendEmailWorker` được kích hoạt tự động bởi **SQS event source mapping** (không gọi thủ công).
+> Do tài khoản SES ở chế độ sandbox, sender `noreply@example.com` và mọi địa chỉ nhận đều phải verify trước.
 
 ---
 
@@ -436,15 +441,14 @@ StudentDocuments
 
 | Method | Endpoint | Lambda | Chức năng |
 |---|---|---|---|
-| POST | `/students/{studentId}/upload-url` | createUploadUrl | Tạo Presigned URL |
-| POST | `/students/{studentId}/documents` | saveDocumentMetadata | Lưu metadata hồ sơ |
-| GET | `/students/{studentId}/documents` | getStudentDocuments | Xem danh sách hồ sơ |
+| POST | `/documents/upload-url` | createUploadUrl (docUploadUrl) | Tạo Presigned URL |
+| POST | `/documents/metadata` | saveDocumentMetadata (docSaveMetadata) | Lưu metadata hồ sơ |
+
+> Lưu ý: thực tế endpoint là `/documents/...` (không nằm dưới `/students/{id}/...`).
 
 ### 8.3. API thông báo
 
-| Method | Endpoint | Lambda | Chức năng |
-|---|---|---|---|
-| POST | `/notifications` | createNotification | Tạo thông báo hoặc gửi message vào SQS |
+Thông báo được xử lý bất đồng bộ: các Lambda nghiệp vụ gửi message vào **SQS** `student-notifications`, Lambda `sendEmailWorker` (trigger bởi SQS event source mapping) đọc message và gửi email qua **SES**. Không có endpoint `/notifications` công khai.
 
 ---
 
@@ -497,23 +501,26 @@ frontend/.env
 Nội dung mẫu:
 
 ```env
-VITE_AWS_REGION=ap-southeast-1
-VITE_COGNITO_USER_POOL_ID=your-user-pool-id
-VITE_COGNITO_CLIENT_ID=your-app-client-id
-VITE_API_BASE_URL=https://your-api-id.execute-api.ap-southeast-1.amazonaws.com
+VITE_API_ENDPOINT=https://<api-id>.execute-api.us-east-1.amazonaws.com/prod
+VITE_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
+VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
+
+> Lưu ý: code frontend thực tế đọc các biến `VITE_API_ENDPOINT`, `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID` (không dùng `VITE_AWS_REGION` / `VITE_API_BASE_URL`).
 
 ### 10.2. Backend Lambda
 
-Các biến môi trường cần cấu hình trong Lambda:
+Các biến môi trường được set bởi `scripts/deploy-lambdas.sh` (region mặc định `us-east-1` đã được fix cứng trong `backend/common/*.js`):
 
 ```env
-AWS_REGION=ap-southeast-1
 STUDENTS_TABLE=Students
-STUDENT_DOCUMENTS_TABLE=StudentDocuments
-DOCUMENT_BUCKET=student-management-documents
-NOTIFICATION_QUEUE_URL=https://sqs.ap-southeast-1.amazonaws.com/account-id/student-notification-queue
-SES_SENDER_EMAIL=your-verified-email@example.com
+TEACHERS_TABLE=Teachers
+GRADES_TABLE=Grades
+MATERIALS_TABLE=Materials
+DOCUMENTS_TABLE=Documents
+DOCUMENTS_BUCKET=student-documents-<account-id>
+NOTIFICATION_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/<account-id>/student-notifications
+FROM_EMAIL=noreply@example.com
 ```
 
 ---
@@ -695,11 +702,13 @@ Frontend cần:
 - Nhận JWT Token.
 - Gửi token vào header khi gọi API.
 
-Ví dụ header:
+Ví dụ header (frontend gửi raw JWT, không có tiền tố "Bearer"):
 
 ```http
-Authorization: Bearer <JWT_TOKEN>
+Authorization: <JWT_TOKEN>
 ```
+
+> Lưu ý: Cognito Authorizer chấp nhận raw JWT trong header `Authorization`.
 
 ### Bước 9. Deploy frontend lên S3
 
