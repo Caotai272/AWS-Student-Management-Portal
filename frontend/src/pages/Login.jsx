@@ -19,29 +19,48 @@ export default function Login() {
       await getSessionTokens()
       navigate('/dashboard')
     } catch (err) {
-      setError(err.message || 'Đăng nhập thất bại')
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="login-container">
-      <h2>Đăng nhập</h2>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit} className="login-form">
-        <label>
-          Tên đăng nhập
-          <input value={username} onChange={(e) => setUsername(e.target.value)} required />
-        </label>
-        <label>
-          Mật khẩu
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-        </button>
-      </form>
+    <div className="login-page">
+      <div className="login-card">
+        <h1 className="login-title">AWS Student Portal</h1>
+        <p className="login-subtitle">Đăng nhập để quản lý sinh viên</p>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input
+              className="form-input"
+              type="email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="admin@example.com"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Mật khẩu</label>
+            <input
+              className="form-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+            {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

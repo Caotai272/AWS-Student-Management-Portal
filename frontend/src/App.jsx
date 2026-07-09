@@ -1,7 +1,5 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import Sidebar from './components/Sidebar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -10,18 +8,6 @@ import StudentCreate from './pages/StudentCreate'
 import StudentEdit from './pages/StudentEdit'
 import StudentDetail from './pages/StudentDetail'
 import UploadDocument from './pages/UploadDocument'
-
-function Layout({ children }) {
-  return (
-    <div className="layout">
-      <Navbar />
-      <div className="layout-body">
-        <Sidebar />
-        <main className="content">{children}</main>
-      </div>
-    </div>
-  )
-}
 
 export default function App() {
   return (
@@ -32,17 +18,15 @@ export default function App() {
           path="/*"
           element={
             <ProtectedRoute>
-              <Layout>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/students" element={<StudentList />} />
-                  <Route path="/students/new" element={<StudentCreate />} />
-                  <Route path="/students/:id" element={<StudentDetail />} />
-                  <Route path="/students/:id/edit" element={<StudentEdit />} />
-                  <Route path="/documents/upload" element={<UploadDocument />} />
-                  <Route path="*" element={<Dashboard />} />
-                </Routes>
-              </Layout>
+              <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/students" element={<StudentList />} />
+                <Route path="/students/new" element={<StudentCreate />} />
+                <Route path="/students/:id" element={<StudentDetail />} />
+                <Route path="/students/:id/edit" element={<StudentEdit />} />
+                <Route path="/documents/upload" element={<UploadDocument />} />
+                <Route path="*" element={<Dashboard />} />
+              </Routes>
             </ProtectedRoute>
           }
         />
