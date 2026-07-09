@@ -8,6 +8,14 @@
 - Cài `AWS SAM CLI` hoặc `Serverless Framework` (tùy chọn).
 
 ## 2. Backend — DynamoDB
+Tạo 5 bảng (Students, Documents, Teachers, Grades, Materials) + GSI hỗ trợ query.
+Script tự động bỏ qua bảng đã tồn tại:
+
+```bash
+bash scripts/deploy-dynamodb.sh ap-southeast-1
+```
+
+Hoặc thủ công:
 ```bash
 aws dynamodb create-table \
   --table-name Students \
@@ -22,6 +30,8 @@ aws dynamodb create-table \
   --key-schema AttributeName=id,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
   --region ap-southeast-1
+
+# Tương tự cho Teachers, Grades, Materials (hoặc dùng script ở trên)
 ```
 
 ## 3. Backend — S3 (tài liệu)
@@ -31,7 +41,11 @@ aws s3api put-bucket-cors --bucket student-documents-<yourname> --cors-configura
 ```
 
 ## 4. Backend — Cognito User Pool
-- Tạo User Pool, App client (không secret), enable đăng nhập bằng email.
+Tạo User Pool + App Client và user demo bằng script (trả về UserPoolId, AppClientId):
+```bash
+bash scripts/setup-cognito.sh ap-southeast-1
+```
+- Hoặc tạo thủ công: User Pool, App client (không secret), enable đăng nhập bằng email.
 - Ghi lại `UserPoolId` và `AppClientId`.
 
 ## 5. Backend — SQS + SES
@@ -41,22 +55,27 @@ aws sqs create-queue --queue-name student-notifications
 - Xác thực domain/email gửi trong SES (sandbox hoặc production).
 
 ## 6. Backend — Lambda + API Gateway
-Với mỗi thư mục trong `backend/students`, `backend/documents`, `backend/notifications`:
+Deploy toàn bộ 21 Lambda (students, documents, teachers, grades, materials, notifications)
+bằng script (cần set trước các biến môi trường):
+
 ```bash
-cd backend/students/createStudent
-npm install
-zip -r createStudent.zip .
-aws lambda create-function \
-  --function-name createStudent \
-  --runtime nodejs18.x --handler index.handler \
-  --role <LAMBDA_EXECUTION_ROLE_ARN> \
-  --zip-file fileb://createStudent.zip \
-  --environment Variables={STUDENTS_TABLE=Students,DOCUMENTS_BUCKET=student-documents-<yourname>,NOTIFICATION_QUEUE_URL=<SQS_URL>,FROM_EMAIL=noreply@example.com}
+DOCUMENTS_BUCKET=student-documents-<yourname> \
+NOTIFICATION_QUEUE_URL=<SQS_URL> \
+FROM_EMAIL=noreply@example.com \
+LAMBDA_ROLE_ARN=arn:aws:iam::<ACCOUNT_ID>:role/student-portal-lambda \
+bash scripts/deploy-lambdas.sh ap-southeast-1
 ```
-- Tạo REST API trên API Gateway, thêm resources `/students`, `/students/{id}`,
-  `/documents/upload-url`, `/documents/metadata` và nối với các Lambda tương ứng.
+
+Script sẽ tạo mới hoặc cập nhật từng function, gán biến môi trường đúng bảng
+(`STUDENTS_TABLE`, `TEACHERS_TABLE`, `GRADES_TABLE`, `MATERIALS_TABLE`, `DOCUMENTS_TABLE`, ...).
+
+Sau đó trên API Gateway (REST):
+- Tạo resources: `/students`, `/students/{id}`, `/documents/upload-url`,
+  `/documents/metadata`, `/teachers`, `/teachers/{id}`, `/grades`, `/grades/{id}`,
+  `/materials`, `/materials/upload-url`, `/materials/metadata`.
+- Nối mỗi resource với Lambda tương ứng (xem tên function trong `scripts/deploy-lambdas.sh`).
 - Bật **Cognito Authorizer** cho các route cần xác thực.
-- Deploy stage `prod`.
+- Deploy stage `prod` và ghi lại API endpoint.
 
 ## 7. Frontend — Build & Deploy
 ```bash
