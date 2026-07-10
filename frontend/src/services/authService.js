@@ -7,10 +7,14 @@ export const login = async (username, password) => {
   return user
 }
 
-export const logout = async () => {
-  await signOut()
+export const clearSession = () => {
   localStorage.removeItem('idToken')
   localStorage.removeItem('accessToken')
+}
+
+export const logout = async () => {
+  await signOut()
+  clearSession()
 }
 
 export const getSessionTokens = async () => {
