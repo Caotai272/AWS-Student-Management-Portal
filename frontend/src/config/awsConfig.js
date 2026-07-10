@@ -17,7 +17,7 @@ const amplifyConfig = {
   API: {
     REST: {
       StudentApi: {
-        endpoint: import.meta.env.VITE_API_ENDPOINT || 'https://24ybbny473.execute-api.us-east-1.amazonaws.com/prod',
+        endpoint: import.meta.env.VITE_API_ENDPOINT || 'https://9k9i3ukwdh.execute-api.us-east-1.amazonaws.com/prod',
         region: import.meta.env.VITE_AWS_REGION || 'us-east-1'
       }
     }
@@ -30,7 +30,7 @@ const amplifyConfig = {
       return {
         allowHeaders: ['Authorization', 'Content-Type'],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowOrigins: ['http://localhost:3000', 'https://24ybbny473.execute-api.us-east-1.amazonaws.com/prod'],
+        allowOrigins: ['http://localhost:3001', 'http://localhost:3000', 'https://9k9i3ukwdh.execute-api.us-east-1.amazonaws.com/prod'],
         exposeHeaders: ['X-Amz-Date', 'Authorization', 'Content-Length'],
         maxAge: 600
       }
@@ -39,7 +39,7 @@ const amplifyConfig = {
       return {
         allowHeaders: ['Authorization', 'Content-Type'],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowOrigins: ['http://localhost:3000', 'https://24ybbny473.execute-api.us-east-1.amazonaws.com/prod'],
+        allowOrigins: ['http://localhost:3001', 'http://localhost:3000', 'https://9k9i3ukwdh.execute-api.us-east-1.amazonaws.com/prod'],
         exposeHeaders: ['X-Amz-Date', 'Authorization', 'Content-Length'],
         maxAge: 600
       }
