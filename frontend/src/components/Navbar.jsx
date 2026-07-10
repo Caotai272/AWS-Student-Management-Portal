@@ -42,7 +42,7 @@ export default function Navbar({ title }) {
         <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => setUserMenuOpen(!userMenuOpen)}>
           <div className="navbar-user-name">{loading ? 'Loading...' : name}</div>
           <div className="navbar-user-role">Administrator</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>Nhấp để đăng xuất</div>
+          <div style={{ fontSize: '12px', color: '#666' }}></div>
         </div>
         {userMenuOpen && (
           <div style={{
@@ -67,7 +67,7 @@ export default function Navbar({ title }) {
                 cursor: 'pointer',
                 fontSize: '14px'
               }}
-            >Đăng xuất</button>
+            >Log out</button>
           </div>
         )}
       </div>

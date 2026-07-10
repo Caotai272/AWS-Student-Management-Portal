@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import StudentForm from '../../components/StudentForm'
-import { createStudent } from '../../services/studentService'
+import { createStudent } from '../../services/testStudentService'
 
 const EMPTY = {
   studentId: '',

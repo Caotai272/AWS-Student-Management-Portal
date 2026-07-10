@@ -5,7 +5,7 @@ import { Search, Plus, Eye, Pencil, Trash2 } from 'lucide-react'
 import Layout from '../../components/Layout'
 import StatusBadge from '../../components/StatusBadge'
 import ConfirmModal from '../../components/ConfirmModal'
-import { getStudents, deleteStudent } from '../../services/studentService'
+import { getStudents, deleteStudent } from '../../services/testStudentService'
 
 const STATUS_FILTERS = ['All', 'Active', 'Inactive', 'Graduated', 'Warning']
 

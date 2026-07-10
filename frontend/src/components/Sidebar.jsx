@@ -43,7 +43,7 @@ export default function Sidebar() {
       <div className="sidebar-footer">
         <button className="sidebar-link" style={{ width: '100%' }} onClick={handleLogout}>
           <LogOut size={18} />
-          Logout
+          Log out
         </button>
       </div>
     </aside>
