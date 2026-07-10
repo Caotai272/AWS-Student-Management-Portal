@@ -3,8 +3,24 @@
 import { signIn, signOut, fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth'
 
 export const login = async (username, password) => {
-  const user = await signIn({ username, password })
-  return user
+  try {
+    const user = await signIn({ username, password })
+    return user
+  } catch (error) {
+    // Xử lý trường hợp UserAlreadyAuthenticatedException
+    if (error.name === 'UserAlreadyAuthenticatedException') {
+      // Người dùng đã đăng nhập, lấy session hiện tại
+      const session = await fetchAuthSession()
+      const idToken = session.tokens?.idToken?.toString()
+      const accessToken = session.tokens?.accessToken?.toString()
+      if (idToken) {
+        localStorage.setItem('idToken', idToken)
+        localStorage.setItem('accessToken', accessToken)
+      }
+      return { isAlreadyAuthenticated: true, message: 'Người dùng đã đăng nhập' }
+    }
+    throw error
+  }
 }
 
 export const clearSession = () => {

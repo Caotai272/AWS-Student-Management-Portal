@@ -28,7 +28,12 @@ function AppInit({ children }) {
     const autoLogin = async () => {
       try {
         console.log('Đang đăng nhập tự động...')
-        await login(DEMO_USERNAME, DEMO_PASSWORD)
+        const result = await login(DEMO_USERNAME, DEMO_PASSWORD)
+        if (result && result.isAlreadyAuthenticated) {
+          console.log('✅ Đã đăng nhập sẵn')
+        } else {
+          console.log('✅ Đã đăng nhập thành công')
+        }
         await getSessionTokens()
         setAuthState('authenticated')
       } catch (err) {
