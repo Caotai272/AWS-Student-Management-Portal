@@ -1,37 +1,44 @@
 :root {
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-light: #DBEAFE;
+  /* Brand color: Ant Design Blue */
+  --color-primary: #1677ff;
+  --color-primary-hover: #4096ff;
+  --color-primary-light: #e6f4ff;
 
-  --color-bg: #F3F4F6;
-  --color-surface: #FFFFFF;
-  --color-sidebar: #111827;
-  --color-sidebar-hover: #1F2937;
+  /* Layout backgrounds: Ant Design light gray page bg, deep dark navy sidebar */
+  --color-bg: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-sidebar: #001529;
+  --color-sidebar-hover: #1677ff;
 
-  --color-text: #111827;
-  --color-text-muted: #6B7280;
-  --color-text-light: #F9FAFB;
-  --color-border: #E5E7EB;
+  /* Typography: Ant Design dark-gray primary text, light-gray secondary text */
+  --color-text: rgba(0, 0, 0, 0.88);
+  --color-text-muted: rgba(0, 0, 0, 0.45);
+  --color-text-light: #ffffff;
+  --color-border: #f0f0f0;
 
-  --color-success: #16A34A;
-  --color-success-light: #DCFCE7;
-  --color-warning: #F59E0B;
-  --color-warning-light: #FEF3C7;
-  --color-danger: #DC2626;
-  --color-danger-light: #FEE2E2;
-  --color-info: #0891B2;
-  --color-info-light: #CFFAFE;
+  /* Status Colors: Ant Design standard green, gold, red, blue */
+  --color-success: #52c41a;
+  --color-success-light: #f6ffed;
+  --color-warning: #faad14;
+  --color-warning-light: #fffbe6;
+  --color-danger: #ff4d4f;
+  --color-danger-light: #fff2f0;
+  --color-info: #1677ff;
+  --color-info-light: #e6f4ff;
 
-  --font-main: Inter, Arial, Helvetica, sans-serif;
+  /* Font matching Ant Design */
+  --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* Border radius matching Ant Design v5 default */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  /* Shadows matching Ant Design */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
 
-  --sidebar-width: 260px;
+  --sidebar-width: 256px; /* standard AntD Sider width */
   --navbar-height: 64px;
 }
 

@@ -8,6 +8,7 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import VerifyCode from './pages/auth/VerifyCode'
 import ResetPassword from './pages/auth/ResetPassword'
 import NewPassword from './pages/auth/NewPassword'
+import Welcome from './pages/Welcome'
 
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/common/Profile'
@@ -102,6 +103,7 @@ export default function App() {
     <BrowserRouter>
       <AppInit>
         <Routes>
+          <Route path="/" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-code" element={<VerifyCode />} />
