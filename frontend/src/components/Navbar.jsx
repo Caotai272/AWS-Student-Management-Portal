@@ -1,11 +1,12 @@
 // src/components/Navbar.jsx
 import { useState, useEffect } from 'react'
-import { getCurrentUserAttributes, logout } from '../services/authService'
+import { getCurrentUserAttributes, logout, getUserRole, getUserEmail } from '../services/authService'
 import { useNavigate } from 'react-router-dom'
 
 export default function Navbar({ title }) {
   const navigate = useNavigate()
-  const [name, setName] = useState('Admin')
+  const [name, setName] = useState(getUserEmail() || 'Admin')
+  const [role, setRole] = useState(getUserRole() || 'Administrator')
   const [loading, setLoading] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -13,11 +14,14 @@ export default function Navbar({ title }) {
     const fetchUserInfo = async () => {
       try {
         const attrs = await getCurrentUserAttributes()
-        if (attrs) setName(attrs.email || name)
+        if (attrs) {
+          setName(attrs.name || attrs.email || name)
+        }
       } catch (e) {
         // ignore
       } finally {
         setLoading(false)
+        setRole(getUserRole() || 'Administrator')
       }
     }
 
@@ -41,7 +45,7 @@ export default function Navbar({ title }) {
       <div className="navbar-user">
         <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => setUserMenuOpen(!userMenuOpen)}>
           <div className="navbar-user-name">{loading ? 'Loading...' : name}</div>
-          <div className="navbar-user-role">Administrator</div>
+          <div className="navbar-user-role">{role}</div>
           <div style={{ fontSize: '12px', color: '#666' }}></div>
         </div>
         {userMenuOpen && (

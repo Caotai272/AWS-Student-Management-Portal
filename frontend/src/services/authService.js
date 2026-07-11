@@ -56,4 +56,31 @@ export const getCurrentUserAttributes = async () => {
   return await fetchUserAttributes()
 }
 
-export default { login, logout, getSessionTokens, getCurrentUserAttributes }
+export const getUserRole = () => {
+  const idToken = localStorage.getItem('idToken')
+  if (!idToken) return null
+  try {
+    const payload = JSON.parse(atob(idToken.split('.')[1]))
+    const groups = payload['cognito:groups'] || []
+    if (groups.includes('Admin')) return 'Admin'
+    if (groups.includes('Staff')) return 'Staff'
+    if (groups.includes('Student')) return 'Student'
+    if (groups.includes('Teacher')) return 'Teacher'
+    return 'User'
+  } catch (e) {
+    return null
+  }
+}
+
+export const getUserEmail = () => {
+  const idToken = localStorage.getItem('idToken')
+  if (!idToken) return null
+  try {
+    const payload = JSON.parse(atob(idToken.split('.')[1]))
+    return payload.email || payload.username || null
+  } catch (e) {
+    return null
+  }
+}
+
+export default { login, logout, getSessionTokens, getCurrentUserAttributes, getUserRole, getUserEmail }
