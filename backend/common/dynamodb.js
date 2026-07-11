@@ -11,7 +11,8 @@ export const TABLE = {
   DOCUMENTS: process.env.DOCUMENTS_TABLE || 'Documents',
   TEACHERS: process.env.TEACHERS_TABLE || 'Teachers',
   GRADES: process.env.GRADES_TABLE || 'Grades',
-  MATERIALS: process.env.MATERIALS_TABLE || 'Materials'
+  MATERIALS: process.env.MATERIALS_TABLE || 'Materials',
+  CLASSES: process.env.CLASSES_TABLE || 'Classes'
 }
 
 // Giữ lại export cũ để tương thích ngược với các Lambda students/documents.

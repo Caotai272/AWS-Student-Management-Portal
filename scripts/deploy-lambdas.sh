@@ -42,6 +42,17 @@ FUNCS=(
   "materials/saveMaterialMetadata|materialSaveMetadata|{MATERIALS_TABLE=Materials,NOTIFICATION_QUEUE_URL=$QUEUE,FROM_EMAIL=$EMAIL}"
   "materials/getMaterials|getMaterials|{MATERIALS_TABLE=Materials}"
   "notifications/sendEmailWorker|sendEmailWorker|{FROM_EMAIL=$EMAIL,NOTIFICATION_QUEUE_URL=$QUEUE}"
+  "admin/listUsers|listCognitoUsers|{}"
+  "admin/createUser|createCognitoUser|{}"
+  "admin/toggleUser|toggleCognitoUser|{}"
+  "admin/deleteUser|deleteCognitoUser|{}"
+  "admin/updateUser|updateCognitoUser|{}"
+  "admin/getCloudWatchLogs|getCloudWatchLogs|{LOG_GROUP_NAME=/aws/lambda/createStudent}"
+  "classes/getClasses|getClasses|{CLASSES_TABLE=Classes}"
+  "classes/getClassById|getClassById|{CLASSES_TABLE=Classes}"
+  "classes/createClass|createClass|{CLASSES_TABLE=Classes}"
+  "classes/updateClass|updateClass|{CLASSES_TABLE=Classes}"
+  "classes/deleteClass|deleteClass|{CLASSES_TABLE=Classes}"
 )
 
 deploy_one () {

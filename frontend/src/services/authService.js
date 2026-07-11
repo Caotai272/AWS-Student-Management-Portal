@@ -6,6 +6,7 @@ export const login = async (username, password) => {
   try {
     // Fix Cognito authentication - Cognito v6 expects username to be email for loginWith.email: true
     const user = await signIn({ username, password })
+    await getSessionTokens()
     return user
   } catch (error) {
     // Xử lý trường hợp UserAlreadyAuthenticatedException

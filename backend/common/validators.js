@@ -35,4 +35,11 @@ export const validateGrade = (data) => {
   return errors
 }
 
-export default { validateStudent, validateTeacher, validateGrade }
+export const validateClass = (data) => {
+  const errors = []
+  if (!data.classId) errors.push('classId là bắt buộc')
+  if (!data.className || data.className.trim() === '') errors.push('className là bắt buộc')
+  return errors
+}
+
+export default { validateStudent, validateTeacher, validateGrade, validateClass }

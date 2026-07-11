@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Sidebar from '../../components/Sidebar'
+import { createUser } from '../../services/adminService'
 
 export default function AdminUserCreate() {
   const navigate = useNavigate()
@@ -16,13 +17,18 @@ export default function AdminUserCreate() {
     setError('')
     setMessage('')
     try {
-      // Simulate calling Cognito AdminCreateUser + Group association
-      setMessage(`Đã gửi yêu cầu khởi tạo tài khoản ${form.email} (Quyền: ${form.role}) lên Amazon Cognito thành công!`)
+      await createUser({
+        email: form.email,
+        role: form.role,
+        password: form.password
+      })
+      setMessage(`Đã tạo thành công tài khoản ${form.email} (Quyền: ${form.role}) trên Amazon Cognito!`)
       setTimeout(() => {
         navigate('/admin/users')
       }, 1500)
     } catch (err) {
-      setError(err.message || 'Khởi tạo tài khoản thất bại.')
+      console.error(err)
+      setError(err.response?.data?.message || err.message || 'Khởi tạo tài khoản thất bại.')
     } finally {
       setLoading(false)
     }
@@ -75,7 +81,8 @@ export default function AdminUserCreate() {
                   type="text"
                   className="form-control"
                   value={form.password}
-                  disabled
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
                 />
               </div>
 

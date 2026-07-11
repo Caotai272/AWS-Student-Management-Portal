@@ -62,24 +62,22 @@ function AppInit({ children }) {
   const [authState, setAuthState] = useState('initializing') // 'initializing' | 'authenticated' | 'login-needed'
 
   useEffect(() => {
-    const autoLogin = async () => {
+    const checkSession = async () => {
       try {
-        console.log('Đang đăng nhập tự động...')
-        const result = await login(DEMO_USERNAME, DEMO_PASSWORD)
-        if (result && result.isAlreadyAuthenticated) {
-          console.log('✅ Đã đăng nhập sẵn')
+        const session = await getSessionTokens()
+        if (session && session.tokens?.idToken) {
+          console.log('✅ Đã đăng nhập từ trước')
+          setAuthState('authenticated')
         } else {
-          console.log('✅ Đã đăng nhập thành công')
+          setAuthState('login-needed')
         }
-        await getSessionTokens()
-        setAuthState('authenticated')
       } catch (err) {
-        console.error('Đăng nhập tự động thất bại:', err)
+        console.log('🔑 Chưa có session đăng nhập:', err)
         setAuthState('login-needed')
       }
     }
 
-    autoLogin()
+    checkSession()
   }, [])
 
   if (authState === 'initializing') {

@@ -6,7 +6,7 @@ set -e
 
 REGION="${1:-ap-southeast-1}"
 
-TABLES=("Students" "Documents" "Teachers" "Grades" "Materials")
+TABLES=("Students" "Documents" "Teachers" "Grades" "Materials" "Classes")
 
 for TABLE in "${TABLES[@]}"; do
   EXISTS=$(aws dynamodb describe-table --table-name "$TABLE" --region "$REGION" 2>/dev/null || true)

@@ -191,6 +191,24 @@ add_method "$R_MAT_U" POST materialUploadUrl; add_options "$R_MAT_U"
 R_MAT_M=$(get_or_create_resource "$R_MAT" "metadata")
 add_method "$R_MAT_M" POST materialSaveMetadata; add_options "$R_MAT_M"
 
+# /admin/users  &  /admin/users/{username}  &  /admin/users/{username}/toggle  &  /admin/logs
+R_ADM=$(get_or_create_resource "$ROOT_ID" "admin")
+R_ADM_U=$(get_or_create_resource "$R_ADM" "users")
+add_method "$R_ADM_U" GET listCognitoUsers; add_method "$R_ADM_U" POST createCognitoUser; add_options "$R_ADM_U"
+R_ADM_U_N=$(get_or_create_resource "$R_ADM_U" "{username}")
+add_method "$R_ADM_U_N" DELETE deleteCognitoUser; add_method "$R_ADM_U_N" PUT updateCognitoUser; add_options "$R_ADM_U_N"
+R_ADM_U_N_T=$(get_or_create_resource "$R_ADM_U_N" "toggle")
+add_method "$R_ADM_U_N_T" POST toggleCognitoUser; add_options "$R_ADM_U_N_T"
+R_ADM_L=$(get_or_create_resource "$R_ADM" "logs")
+add_method "$R_ADM_L" GET getCloudWatchLogs; add_options "$R_ADM_L"
+
+# /classes  &  /classes/{id}
+R_CLA=$(get_or_create_resource "$ROOT_ID" "classes")
+add_method "$R_CLA" GET getClasses; add_method "$R_CLA" POST createClass; add_options "$R_CLA"
+R_CLA_I=$(get_or_create_resource "$R_CLA" "{id}")
+add_method "$R_CLA_I" GET getClassById; add_method "$R_CLA_I" PUT updateClass; add_method "$R_CLA_I" DELETE deleteClass; add_options "$R_CLA_I"
+
+
 # ====== Deploy ======
 echo "→ Deploy stage $STAGE ..."
 aws apigateway create-deployment --rest-api-id "$API_ID" --stage-name "$STAGE" \
