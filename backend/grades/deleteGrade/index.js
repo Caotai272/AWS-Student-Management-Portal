@@ -1,9 +1,9 @@
 import { DeleteCommand } from '@aws-sdk/lib-dynamodb'
-import { docClient, TABLE } from '../../common/dynamodb'
-import { success, error } from '../../common/response'
-import { withAuth, requireRole } from '../../common/authMiddleware'
+import { docClient, TABLE } from '../../common/dynamodb.js'
+import { success, error } from '../../common/response.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
-const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     const id = event.pathParameters?.id
     if (!id) return error('Thiếu id', 400)
@@ -16,7 +16,7 @@ const handler = async (event) => {
 }
 
 // Áp dụng middleware auth và RBAC
-const authHandler = withAuth(handler)
+const authHandler = withAuth(baseHandler)
 const authAndRoleHandler = requireRole('Admin')(authHandler)
 
 export const handler = authAndRoleHandler

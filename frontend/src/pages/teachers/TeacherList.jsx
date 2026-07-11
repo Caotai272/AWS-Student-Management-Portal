@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Eye, Pencil, Trash2, Search } from 'lucide-react'
 import Layout from '../../components/Layout'
 import ConfirmModal from '../../components/ConfirmModal'
-import { getTeachers, deleteTeacher } from '../../services/testTeacherService'
+import { getTeachers, deleteTeacher } from '../../services/teacherService'
 
 export default function TeacherList() {
   const [teachers, setTeachers] = useState([])

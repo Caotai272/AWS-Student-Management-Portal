@@ -1,20 +1,20 @@
 import { PutCommand } from '@aws-sdk/lib-dynamodb'
-import { docClient } from '../../common/dynamodb'
-import { success, error } from '../../common/response'
-import { sendMessage } from '../../common/sqs'
-import { withAuth, requireRole } from '../../common/authMiddleware'
+import { docClient } from '../../common/dynamodb.js'
+import { success, error } from '../../common/response.js'
+import { sendMessage } from '../../common/sqs.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
 const DOCUMENTS_TABLE = process.env.DOCUMENTS_TABLE || 'StudentDocuments'
 
-const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
 
     let studentId = data.studentId
     let documentId = data.documentId
 
-    if (!studentId && event.pathParameters?.studentId) {
-      studentId = event.pathParameters.studentId
+    if (!studentId && (event.pathParameters?.studentId || event.pathParameters?.id)) {
+      studentId = event.pathParameters.studentId || event.pathParameters.id
     }
 
     if (!studentId) return error('Thiếu studentId', 400)
@@ -69,7 +69,7 @@ const handler = async (event) => {
 }
 
 // Áp dụng middleware auth: dùng requireRole('Student') theo README §8.2
-const authHandler = withAuth(handler)
+const authHandler = withAuth(baseHandler)
 const authAndRoleHandler = requireRole('Student')(authHandler)
 
 export const handler = authAndRoleHandler

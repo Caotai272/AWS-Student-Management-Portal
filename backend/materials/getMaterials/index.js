@@ -1,10 +1,10 @@
 // materials/getMaterials/index.js
 import { ScanCommand } from '@aws-sdk/lib-dynamodb'
-import { docClient, TABLE } from '../../common/dynamodb'
-import { success, error } from '../../common/response'
-import { withAuth, requireRole } from '../../common/authMiddleware'
+import { docClient, TABLE } from '../../common/dynamodb.js'
+import { success, error } from '../../common/response.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
-const handler = async () => {
+const baseHandler = async () => {
   try {
     const res = await docClient.send(new ScanCommand({ TableName: TABLE.MATERIALS }))
     return success({ materials: res.Items || [], count: res.Count || 0 })
@@ -15,7 +15,7 @@ const handler = async () => {
 }
 
 // Áp dụng middleware auth và RBAC
-const authHandler = withAuth(handler)
+const authHandler = withAuth(baseHandler)
 const authAndRoleHandler = requireRole('Student')(authHandler)
 
 export const handler = authAndRoleHandler

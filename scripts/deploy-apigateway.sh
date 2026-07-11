@@ -10,7 +10,7 @@
 # Mặc định region = us-east-1 (phải KHỚP với User Pool và với vùng đã deploy Lambda).
 # In ra invoke URL ở cuối -> điền vào frontend/.env VITE_API_ENDPOINT.
 set -e
-
+set -x
 REGION="${1:-us-east-1}"
 USER_POOL_ID="${USER_POOL_ID:?Thiếu biến USER_POOL_ID (vd: us-east-1_your-user-pool-id)}"
 API_NAME="student-portal-api"
@@ -78,8 +78,8 @@ add_method() {
   local rid=$1 http=$2 fn=$3
   local uri="$LAMBDA_URI_PREFIX:$fn/invocations"
 
-  # Phương pháp này hỗ trợ path parameter {id}
-  local resourceArn="arn:aws:execute-api:$REGION:$ACCOUNT:$API_ID$rid/$http/*"
+  # Sử dụng wildcard để gán quyền invoke từ API Gateway cho toàn bộ API ID
+  local resourceArn="arn:aws:execute-api:$REGION:$ACCOUNT:$API_ID/*"
 
   if [ "$http" != "OPTIONS" ]; then
     # Method cấu hình với Cognito Authorizer
@@ -93,12 +93,14 @@ add_method() {
       --response-parameters "method.response.header.Access-Control-Allow-Origin='*',method.response.header.Access-Control-Allow-Headers='Content-Type,Authorization',method.response.header.Access-Control-Allow-Methods='GET,POST,PUT,DELETE,OPTIONS'" \
       --region "$REGION" >/dev/null 2>&1 || true
 
-    # Cấp quyền Lambda invoke với resource ARN chính xác
-    local sid="${fn}-${rid}-${http}" sid_clean=${sid//[^a-zA-Z0-9]/}
+    local sid="${fn}-${rid}-${http}"
+    local sid_clean
+    sid_clean=$(echo "$sid" | tr -cd 'a-zA-Z0-9')
+    aws lambda remove-permission --function-name "$fn" --statement-id "$sid_clean" --region "$REGION" >/dev/null 2>&1 || true
     aws lambda add-permission --function-name "$fn" --statement-id "$sid_clean" \
       --action lambda:InvokeFunction --principal apigateway.amazonaws.com \
       --source-arn "$resourceArn" \
-      --region "$REGION" >/dev/null 2>&1 || echo "  (quyền $fn có thể đã tồn tại)"
+      --region "$REGION" >/dev/null
 
     # Integration Response với CORS headers
     aws apigateway put-integration-response --rest-api-id "$API_ID" --resource-id "$rid" \
@@ -119,17 +121,20 @@ add_options() {
   local rid=$1
   aws apigateway put-method --rest-api-id "$API_ID" --resource-id "$rid" \
     --http-method OPTIONS --authorization-type NONE --region "$REGION" >/dev/null 2>&1 || true
+  # MOCK integration cần request-template sinh statusCode: 200
   aws apigateway put-integration --rest-api-id "$API_ID" --resource-id "$rid" \
-    --http-method OPTIONS --type MOCK --request-templates '{}' \
+    --http-method OPTIONS --type MOCK \
+    --request-templates '{"application/json":"{\"statusCode\":200}"}' \
     --region "$REGION" >/dev/null 2>&1 || true
   aws apigateway put-method-response --rest-api-id "$API_ID" --resource-id "$rid" \
     --http-method OPTIONS --status-code 200 \
     --response-parameters "method.response.header.Access-Control-Allow-Origin=false,method.response.header.Access-Control-Allow-Headers=false,method.response.header.Access-Control-Allow-Methods=false" \
     --region "$REGION" >/dev/null 2>&1 || true
+  # Dùng JSON để tránh lỗi phân tách và mất dấu nháy đơn trên Windows/Bash
   aws apigateway put-integration-response --rest-api-id "$API_ID" --resource-id "$rid" \
     --http-method OPTIONS --status-code 200 \
-    --response-parameters "method.response.header.Access-Control-Allow-Origin='*',method.response.header.Access-Control-Allow-Headers='Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',method.response.header.Access-Control-Allow-Methods='GET,POST,PUT,DELETE,OPTIONS'" \
-    --region "$REGION" >/dev/null 2>&1 || true
+    --response-parameters '{"method.response.header.Access-Control-Allow-Origin":"'\''*'\''","method.response.header.Access-Control-Allow-Headers":"'\''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'\''","method.response.header.Access-Control-Allow-Methods":"'\''GET,POST,PUT,DELETE,OPTIONS'\''"}' \
+    --region "$REGION" >/dev/null
 }
 
 # ====== Tạo resources & methods ======
@@ -144,6 +149,12 @@ for m in GET PUT DELETE; do
   add_method "$R_STU_I" "$m" "$( [ "$m" = GET ] && echo getStudentById || ([ "$m" = PUT ] && echo updateStudent || echo deleteStudent ))"
  done
 add_options "$R_STU_I"
+
+# /students/{id}/documents
+R_STU_I_DOC=$(get_or_create_resource "$R_STU_I" "documents")
+add_method "$R_STU_I_DOC" GET getStudentDocuments
+add_method "$R_STU_I_DOC" POST docSaveMetadata
+add_options "$R_STU_I_DOC"
 
 # /teachers
 R_TEA=$(get_or_create_resource "$ROOT_ID" "teachers")

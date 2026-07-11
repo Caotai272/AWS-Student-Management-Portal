@@ -27,6 +27,7 @@ FUNCS=(
   "students/deleteStudent|deleteStudent|{STUDENTS_TABLE=Students}"
   "documents/createUploadUrl|docUploadUrl|{DOCUMENTS_BUCKET=$BUCKET}"
   "documents/saveDocumentMetadata|docSaveMetadata|{DOCUMENTS_TABLE=Documents,NOTIFICATION_QUEUE_URL=$QUEUE,FROM_EMAIL=$EMAIL}"
+  "documents/getStudentDocuments|getStudentDocuments|{DOCUMENTS_TABLE=Documents}"
   "teachers/createTeacher|createTeacher|{TEACHERS_TABLE=Teachers,NOTIFICATION_QUEUE_URL=$QUEUE,FROM_EMAIL=$EMAIL}"
   "teachers/getTeachers|getTeachers|{TEACHERS_TABLE=Teachers}"
   "teachers/getTeacherById|getTeacherById|{TEACHERS_TABLE=Teachers}"
@@ -58,10 +59,9 @@ deploy_one () {
   # ("type":"module" trong backend/package.json). Thiếu file này Lambda báo
   # "Cannot use import statement outside a module".
   cp "backend/package.json" "$pkg/package.json"
-  # Đảm bảo AWS_REGION luôn được set rõ ràng (tránh default sai region
-  # local env_full="$env"  (AWS_REGION là reserved key nên không set tay;
-  # region đã được fix cứng mặc định us-east-1 trong common/*.js)
-  local env_full="$env"
+  # Tự động chèn COGNITO_USER_POOL_ID và COGNITO_USER_POOL_CLIENT_ID vào env
+  local env_trimmed="${env%\}}"
+  local env_full="${env_trimmed},COGNITO_USER_POOL_ID=us-east-1_7SwNQ0qYm,COGNITO_USER_POOL_CLIENT_ID=6o5g3hcus9ehbmk90acqeuplau}"
   # Nén thành zip (dùng đường dẫn Windows tuyệt đối vì aws cli trên Windows
   # không đọc được /tmp kiểu POSIX). Dùng 7z nếu có, fallback python.
   local zipwin

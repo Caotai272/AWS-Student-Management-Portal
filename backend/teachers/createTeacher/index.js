@@ -1,11 +1,12 @@
-// teachers/createTeacher/index.js
+// backend/teachers/createTeacher/index.js
 import { PutCommand } from '@aws-sdk/lib-dynamodb'
-import { docClient, TABLE } from '../../common/dynamodb'
-import { success, error } from '../../common/response'
-import { validateTeacher } from '../../common/validators'
-import { sendMessage } from '../../common/sqs'
+import { docClient, TABLE } from '../../common/dynamodb.js'
+import { success, error } from '../../common/response.js'
+import { validateTeacher } from '../../common/validators.js'
+import { sendMessage } from '../../common/sqs.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
-export const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
     const errs = validateTeacher(data)
@@ -31,3 +32,9 @@ export const handler = async (event) => {
     return error(err.message || 'Lỗi máy chủ', 500)
   }
 }
+
+// Áp dụng middleware auth và RBAC
+const authHandler = withAuth(baseHandler)
+const authAndRoleHandler = requireRole('Admin')(authHandler)  // Teachers require Admin role
+
+export const handler = authAndRoleHandler

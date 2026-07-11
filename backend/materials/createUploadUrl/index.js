@@ -1,8 +1,9 @@
 // materials/createUploadUrl/index.js
-import { success, error } from '../../common/response'
-import { getUploadSignedUrl, BUCKET_NAME } from '../../common/s3'
+import { success, error } from '../../common/response.js'
+import { getUploadSignedUrl, BUCKET_NAME } from '../../common/s3.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
-export const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
     const { fileName, contentType, type } = data
@@ -21,3 +22,9 @@ export const handler = async (event) => {
     return error(err.message || 'Lỗi máy chủ', 500)
   }
 }
+
+// Áp dụng middleware auth và RBAC: chỉ Student được upload tài liệu
+const authHandler = withAuth(baseHandler)
+const authAndRoleHandler = requireRole('Student')(authHandler)
+
+export const handler = authAndRoleHandler

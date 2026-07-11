@@ -1,15 +1,15 @@
 // backend/documents/getStudentDocuments/index.js
 import { QueryCommand } from '@aws-sdk/lib-dynamodb'
-import { docClient } from '../../common/dynamodb'
-import { success, error } from '../../common/response'
-import { withAuth, requireRole } from '../../common/authMiddleware'
+import { docClient } from '../../common/dynamodb.js'
+import { success, error } from '../../common/response.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
 const DOCUMENTS_TABLE = process.env.DOCUMENTS_TABLE || 'StudentDocuments'
 
-const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     // Extract studentId from path parameters (based on new endpoint: /students/{studentId}/documents)
-    let studentId = event.pathParameters?.studentId
+    let studentId = event.pathParameters?.studentId || event.pathParameters?.id
 
     // Also support old endpoint: /documents/metadata with studentId in body
     if (!studentId && event.body) {
@@ -45,7 +45,7 @@ const handler = async (event) => {
 }
 
 // Áp dụng middleware auth và RBAC
-const authHandler = withAuth(handler)
+const authHandler = withAuth(baseHandler)
 const authAndRoleHandler = requireRole('Student')(authHandler)
 
 export const handler = authAndRoleHandler

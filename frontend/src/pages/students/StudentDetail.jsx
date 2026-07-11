@@ -5,16 +5,32 @@ import { Pencil, Upload } from 'lucide-react'
 import Layout from '../../components/Layout'
 import StatusBadge from '../../components/StatusBadge'
 import { getStudentById } from '../../services/studentService'
+import { getStudentDocuments } from '../../services/documentService'
 
 export default function StudentDetail() {
   const { id } = useParams()
   const [student, setStudent] = useState(null)
+  const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getStudentById(id)
-      .then((res) => setStudent(res.data))
-      .catch(() => setStudent(null))
+    setLoading(true)
+    Promise.all([
+      getStudentById(id),
+      getStudentDocuments(id).catch((err) => {
+        console.error('Lỗi tải tài liệu:', err)
+        return { documents: [] }
+      })
+    ])
+      .then(([studentRes, docRes]) => {
+        setStudent(studentRes.data)
+        const docs = docRes.documents || docRes.data?.documents || []
+        setDocuments(docs)
+      })
+      .catch((err) => {
+        console.error('Lỗi tải chi tiết sinh viên:', err)
+        setStudent(null)
+      })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -32,7 +48,7 @@ export default function StudentDetail() {
     ['Lớp', student.className]
   ]
 
-  const documents = student.documents || []
+
 
   return (
     <Layout title="Student Detail">

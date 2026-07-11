@@ -1,11 +1,11 @@
 import { PutCommand } from '@aws-sdk/lib-dynamodb'
-import { docClient, TABLE } from '../../common/dynamodb'
-import { success, error } from '../../common/response'
-import { validateGrade } from '../../common/validators'
-import { sendMessage } from '../../common/sqs'
-import { withAuth, requireRole } from '../../common/authMiddleware'
+import { docClient, TABLE } from '../../common/dynamodb.js'
+import { success, error } from '../../common/response.js'
+import { validateGrade } from '../../common/validators.js'
+import { sendMessage } from '../../common/sqs.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
-const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
     const errs = validateGrade(data)
@@ -33,7 +33,7 @@ const handler = async (event) => {
 }
 
 // Áp dụng middleware auth và RBAC
-const authHandler = withAuth(handler)
+const authHandler = withAuth(baseHandler)
 const authAndRoleHandler = requireRole('Teacher')(authHandler)
 
 export const handler = authAndRoleHandler

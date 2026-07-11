@@ -95,7 +95,7 @@ export const verifyCognitoToken = async (event) => {
     event.requestContext.authorizer.user = {
       username: user.Username,
       email: user.Attributes?.find(attr => attr.Name === 'email')?.Value || '',
-      cognitoGroups: user.UserGroups || [],
+      cognitoGroups: decodedToken['cognito:groups'] || user.UserGroups || [],
       token: decodedToken
     }
 

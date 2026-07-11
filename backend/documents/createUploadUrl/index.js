@@ -1,8 +1,8 @@
-import { success, error } from '../../common/response'
-import { getUploadSignedUrl, BUCKET_NAME } from '../../common/s3'
-import { withAuth, requireRole } from '../../common/authMiddleware'
+import { success, error } from '../../common/response.js'
+import { getUploadSignedUrl, BUCKET_NAME } from '../../common/s3.js'
+import { withAuth, requireRole } from '../../common/authMiddleware.js'
 
-const handler = async (event) => {
+const baseHandler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
     const { fileName, contentType, studentId, documentId } = data
@@ -23,7 +23,7 @@ const handler = async (event) => {
   }
 }
 
-const authHandler = withAuth(handler)
+const authHandler = withAuth(baseHandler)
 
 const StaffOrStudentRoleHandler = async (event, context, callback) => {
   const authorizer = event.requestContext?.authorizer

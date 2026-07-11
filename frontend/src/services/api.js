@@ -22,7 +22,13 @@ api.interceptors.request.use(async (config) => {
 
 // Xử lý lỗi 401 -> chuyển về trang login.
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Tự động giải nén response wrapper (success: true, data: ...) từ Lambda
+    if (response.data && response.data.success === true && Object.prototype.hasOwnProperty.call(response.data, 'data')) {
+      response.data = response.data.data
+    }
+    return response
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('idToken')
