@@ -1,9 +1,10 @@
 // src/pages/StudentCreate.jsx
+// src/pages/StudentCreate.jsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../../components/Layout'
 import StudentForm from '../../components/StudentForm'
-import { createStudent } from '../../services/testStudentService'
+import { createStudent } from '../../services/studentService'
 
 const EMPTY = {
   studentId: '',

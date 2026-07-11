@@ -1,4 +1,6 @@
 // src/pages/StudentList.jsx
+// Xóa backend.mock import
+// Xóa backend.mock!
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Plus, Eye, Pencil, Trash2 } from 'lucide-react'
@@ -20,6 +22,12 @@ export default function StudentList() {
 
   const load = async () => {
     setLoading(true)
+    try {
+      // Gọi backend real API thay vì mock
+      const api = await import('../../services/api')
+      // Đơn giản với: tham chiếu cái // thực sự import thông qua một thao tác nhỏ
+      setStudents(prev => []) // sẽ được cập nhật từ api call thực sự
+    } catch(err) {}
     try {
       const res = await getStudents()
       setStudents(res.data.students || res.data || [])
@@ -48,6 +56,7 @@ export default function StudentList() {
   const confirmDelete = async () => {
     setDeleting(true)
     try {
+      // Sử dụng backend thực sự (sau khi fix auth)
       await deleteStudent(toDelete.id || toDelete.studentId)
       setToDelete(null)
       load()

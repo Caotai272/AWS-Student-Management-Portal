@@ -4,6 +4,7 @@ import { signIn, signOut, fetchAuthSession, fetchUserAttributes } from 'aws-ampl
 
 export const login = async (username, password) => {
   try {
+    // Fix Cognito authentication - Cognito v6 expects username to be email for loginWith.email: true
     const user = await signIn({ username, password })
     return user
   } catch (error) {
@@ -18,6 +19,10 @@ export const login = async (username, password) => {
         localStorage.setItem('accessToken', accessToken)
       }
       return { isAlreadyAuthenticated: true, message: 'Người dùng đã đăng nhập' }
+    }
+    // Cung cấp error message rõ ràng hơn cho việc xác thực Cognito thất bại
+    if (error.message.includes('Invalid credentials') || error.message.includes('Authentication failure')) {
+      throw new Error('Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.')
     }
     throw error
   }

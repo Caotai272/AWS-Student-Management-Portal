@@ -1,4 +1,4 @@
-// documents/createUploadUrl/index.js
+// backend/documents/createUploadUrl/index.js
 import { success, error } from '../../common/response'
 import { getUploadSignedUrl, BUCKET_NAME } from '../../common/s3'
 
