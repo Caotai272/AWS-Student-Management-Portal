@@ -39,14 +39,14 @@ export default function MaterialDetail() {
                   <strong>Loại tài liệu:</strong> <span style={{ float: 'right' }} className="badge badge-info">{material.type}</span>
                 </div>
                 <div style={{ borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
-                  <strong>Ngày đăng tải:</strong> <span style={{ float: 'right' }}>{material.uploadedAt ? new Date(material.uploadedAt).toLocaleDateString() : 'N/A'}</span>
+                  <strong>Ngày đăng tải:</strong> <span style={{ float: 'right' }}>{material.uploadedAt ? new Date(material.uploadedAt).toLocaleDateString() : 'Chưa rõ'}</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button className="btn btn-outline" onClick={() => navigate('/materials')}>Quay lại</button>
                 <a href={material.fileUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
-                  Tải xuống tài liệu
+                  Tải xuống
                 </a>
               </div>
             </div>

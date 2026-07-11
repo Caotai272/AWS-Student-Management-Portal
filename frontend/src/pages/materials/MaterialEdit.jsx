@@ -7,7 +7,8 @@ import api from '../../services/api'
 export default function MaterialEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ title: '', subject: '', type: 'slide' })
+  const [form, setForm] = useState({ title: '', subject: '', type: 'slide', fileName: '' })
+  const [file, setFile] = useState(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -20,9 +21,17 @@ export default function MaterialEdit() {
       .catch(err => console.error(err))
   }, [id])
 
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0])
+      setForm({ ...form, fileName: e.target.files[0].name })
+      setMessage('Đã chọn file thay thế thành công.')
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    setMessage('Cập nhật siêu dữ liệu tài liệu thành công!')
+    setMessage('Cập nhật thay đổi tài liệu học tập thành công!')
     setTimeout(() => {
       navigate('/materials')
     }, 1500)
@@ -32,7 +41,7 @@ export default function MaterialEdit() {
     <div className="app-layout">
       <Sidebar />
       <div className="main-wrapper">
-        <Navbar title="Sửa Siêu Dữ Liệu Tài Liệu" />
+        <Navbar title="Chỉnh Sửa Tài Liệu Giảng Dạy" />
         <main className="main-content">
           <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
             {message && <div className="alert alert-success">{message}</div>}
@@ -50,7 +59,7 @@ export default function MaterialEdit() {
               </div>
 
               <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label className="form-label">Tên môn học</label>
+                <label className="form-label">Môn học</label>
                 <input
                   type="text"
                   className="form-control"
@@ -60,21 +69,20 @@ export default function MaterialEdit() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: '20px' }}>
-                <label className="form-label">Loại tài liệu</label>
-                <select
-                  className="form-control"
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                >
-                  <option value="slide">Slide bài giảng</option>
-                  <option value="exercise">Bài tập</option>
-                  <option value="exam">Đề thi</option>
-                  <option value="reference">Tài liệu tham khảo</option>
-                </select>
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label className="form-label">Tên file đính kèm: <strong>{form.fileName || 'N/A'}</strong></label>
+                <div style={{ marginTop: '5px' }}>
+                  <input
+                    type="file"
+                    id="replace-file"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                  <button type="button" className="btn btn-outline" onClick={() => document.getElementById('replace-file').click()}>Thay file</button>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button type="button" className="btn btn-outline" onClick={() => navigate('/materials')}>Hủy</button>
                 <button type="submit" className="btn btn-primary">Lưu thay đổi</button>
               </div>

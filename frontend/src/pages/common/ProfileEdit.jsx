@@ -37,6 +37,10 @@ export default function ProfileEdit() {
     loadProfile()
   }, [])
 
+  const handleAvatarChange = () => {
+    setMessage('Mô phỏng chọn và thay đổi ảnh đại diện (upload lên S3 Bucket) thành công!')
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     setMessage('Cập nhật hồ sơ cá nhân thành công!')
@@ -58,6 +62,27 @@ export default function ProfileEdit() {
             <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
               {message && <div className="alert alert-success">{message}</div>}
               {error && <div className="alert alert-danger">{error}</div>}
+
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{
+                  width: '90px',
+                  height: '90px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-primary-light)',
+                  margin: '0 auto 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '28px',
+                  fontWeight: 'bold',
+                  color: 'var(--color-primary)'
+                }}>
+                  {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <button type="button" className="btn btn-outline btn-sm" onClick={handleAvatarChange}>
+                  Đổi ảnh đại diện
+                </button>
+              </div>
 
               <form onSubmit={handleSubmit}>
                 <div className="form-group" style={{ marginBottom: '15px' }}>
@@ -101,7 +126,7 @@ export default function ProfileEdit() {
                 
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/profile')}>Hủy</button>
-                  <button type="submit" className="btn btn-primary">Lưu thông tin</button>
+                  <button type="submit" className="btn btn-primary">Lưu thay đổi</button>
                 </div>
               </form>
             </div>

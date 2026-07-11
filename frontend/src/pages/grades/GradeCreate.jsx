@@ -24,11 +24,12 @@ export default function GradeCreate() {
     setError('')
     setMessage('')
     try {
+      const scoreTotal = Number((Number(form.attendance) * 0.1 + Number(form.midterm) * 0.3 + Number(form.final) * 0.6).toFixed(2))
       const payload = {
         studentId: form.studentId,
-        teacherId: 'TEACHER01', // Mock teacher ID
+        teacherId: 'TEACHER01',
         subject: form.subject,
-        score: Number((Number(form.attendance) * 0.1 + Number(form.midterm) * 0.3 + Number(form.final) * 0.6).toFixed(2)),
+        score: scoreTotal,
         details: {
           attendance: Number(form.attendance),
           midterm: Number(form.midterm),
@@ -38,12 +39,12 @@ export default function GradeCreate() {
       }
       
       await api.post('/grades', payload)
-      setMessage('Nhập điểm sinh viên thành công!')
+      setMessage('Lưu điểm sinh viên thành công!')
       setTimeout(() => {
         navigate('/grades')
       }, 1500)
     } catch (err) {
-      setError(err.response?.data?.message || 'Nhập điểm thất bại. Vui lòng kiểm tra lại thông tin.')
+      setError(err.response?.data?.message || 'Lưu điểm thất bại.')
     } finally {
       setLoading(false)
     }
@@ -67,7 +68,7 @@ export default function GradeCreate() {
                   className="form-control"
                   value={form.studentId}
                   onChange={(e) => setForm({ ...form, studentId: e.target.value })}
-                  placeholder="Nhập mã số sinh viên"
+                  placeholder="SV001"
                   required
                 />
               </div>
@@ -79,7 +80,7 @@ export default function GradeCreate() {
                   className="form-control"
                   value={form.subject}
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                  placeholder="Lập trình Java, Cơ sở dữ liệu..."
+                  placeholder="Lập trình Java..."
                   required
                 />
               </div>
@@ -124,14 +125,14 @@ export default function GradeCreate() {
                   className="form-control"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  placeholder="Ghi chú thêm (nếu có)"
+                  placeholder="Nhập ghi chú"
                 />
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button type="button" className="btn btn-outline" onClick={() => navigate('/grades')}>Hủy</button>
                 <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? 'Đang lưu...' : 'Nhập điểm'}
+                  Lưu điểm
                 </button>
               </div>
             </form>

@@ -1,39 +1,37 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function ResetPassword() {
-  const location = useLocation()
   const navigate = useNavigate()
-  const email = location.state?.email || ''
-  const code = location.state?.code || ''
-
+  const location = useLocation()
+  const [email] = useState(location.state?.email || '')
+  const [code] = useState(location.state?.code || '')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleReset = (e) => {
     e.preventDefault()
-    if (password.length < 8) return setError('Mật khẩu mới phải dài tối thiểu 8 ký tự')
-    if (password !== confirmPassword) return setError('Mật khẩu xác nhận không khớp')
-
-    setMessage('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay.')
+    if (password !== confirmPassword) {
+      setError('Mật khẩu nhập lại không khớp.')
+      return
+    }
+    setMessage('Mật khẩu đã được thiết lập lại thành công!')
     setError('')
     setTimeout(() => {
       navigate('/login')
-    }, 2000)
+    }, 1500)
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-title">Đặt lại mật khẩu</h1>
-        <p className="login-subtitle">Tạo mật khẩu mới cho tài khoản: {email}</p>
-
+    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg-alt)' }}>
+      <div className="card" style={{ width: '400px', padding: '30px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--color-primary)' }}>Đặt Lại Mật Khẩu</h2>
         {message && <div className="alert alert-success">{message}</div>}
         {error && <div className="alert alert-danger">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleReset}>
           <div className="form-group" style={{ marginBottom: '15px' }}>
             <label className="form-label">Mật khẩu mới</label>
             <input
@@ -41,22 +39,26 @@ export default function ResetPassword() {
               className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Tối thiểu 8 ký tự"
+              placeholder="********"
+              required
             />
           </div>
           <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label className="form-label">Xác nhận mật khẩu mới</label>
+            <label className="form-label">Xác nhận mật khẩu</label>
             <input
               type="password"
               className="form-control"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Nhập lại mật khẩu mới"
+              placeholder="********"
+              required
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-            Lưu thay đổi
-          </button>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button type="submit" className="btn btn-primary">Đặt lại mật khẩu</button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate('/verify-code')}>Quay lại</button>
+          </div>
         </form>
       </div>
     </div>

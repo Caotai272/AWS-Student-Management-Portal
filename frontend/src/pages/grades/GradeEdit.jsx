@@ -5,7 +5,7 @@ import Sidebar from '../../components/Sidebar'
 import api from '../../services/api'
 
 export default function GradeEdit() {
-  const { id } = useParams() // gradeId
+  const { id } = useParams()
   const navigate = useNavigate()
   
   const [form, setForm] = useState({
@@ -55,7 +55,7 @@ export default function GradeEdit() {
       }, 1500)
     } catch (err) {
       console.error(err)
-      setError('Cập nhật thất bại: ' + (err.response?.data?.message || err.message))
+      setError('Cập nhật thất bại.')
     }
   }
 
@@ -130,13 +130,12 @@ export default function GradeEdit() {
                     className="form-control"
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    placeholder="Không bắt buộc"
                   />
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                   <button type="button" className="btn btn-outline" onClick={() => navigate('/grades')}>Hủy</button>
-                  <button type="submit" className="btn btn-primary">Lưu thay đổi</button>
+                  <button type="submit" className="btn btn-primary">Cập nhật điểm</button>
                 </div>
               </form>
             </div>

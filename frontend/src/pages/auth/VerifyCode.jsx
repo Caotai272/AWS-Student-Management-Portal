@@ -1,51 +1,52 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function VerifyCode() {
-  const location = useLocation()
   const navigate = useNavigate()
-  const email = location.state?.email || ''
-  
+  const location = useLocation()
+  const [email] = useState(location.state?.email || '')
   const [code, setCode] = useState('')
-  const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleVerify = (e) => {
     e.preventDefault()
-    if (code.length < 6) return setError('Mã xác thực gồm 6 chữ số')
-
-    setMessage('Xác nhận thành công! Chuyển hướng đến trang đặt lại mật khẩu.')
-    setError('')
+    setMessage('Xác nhận mã OTP thành công!')
     setTimeout(() => {
       navigate('/reset-password', { state: { email, code } })
-    }, 1500)
+    }, 1200)
+  }
+
+  const handleResend = () => {
+    setMessage('Mã OTP xác nhận mới đã được gửi lại vào email của bạn.')
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-title">Nhập mã OTP</h1>
-        <p className="login-subtitle">Mã xác thực đã được gửi đến: <strong>{email}</strong></p>
-
+    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg-alt)' }}>
+      <div className="card" style={{ width: '400px', padding: '30px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--color-primary)' }}>Xác Nhận Mã OTP</h2>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', textAlign: 'center', marginBottom: '20px' }}>
+          Mã xác thực đã được gửi đến: <strong style={{ color: 'var(--color-text)' }}>{email || 'email của bạn'}</strong>.
+        </p>
         {message && <div className="alert alert-success">{message}</div>}
-        {error && <div className="alert alert-danger">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleVerify}>
           <div className="form-group" style={{ marginBottom: '20px' }}>
-            <label className="form-label">Mã xác thực OTP</label>
+            <label className="form-label">Mã xác thực OTP (6 chữ số)</label>
             <input
               type="text"
               className="form-control"
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-              placeholder="######"
-              maxLength={6}
-              style={{ letterSpacing: '8px', textAlign: 'center', fontSize: '20px', fontWeight: 'bold' }}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="123456"
+              required
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-            Xác nhận
-          </button>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button type="submit" className="btn btn-primary">Xác nhận mã</button>
+            <button type="button" className="btn btn-secondary" onClick={handleResend}>Gửi lại mã</button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate('/forgot-password')}>Quay lại</button>
+          </div>
         </form>
       </div>
     </div>

@@ -9,6 +9,7 @@ export default function GradeDetail() {
   const navigate = useNavigate()
   const [grade, setGrade] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     api.get(`/grades/${id}`)
@@ -17,12 +18,21 @@ export default function GradeDetail() {
       .finally(() => setLoading(false))
   }, [id])
 
+  const handlePrint = () => {
+    setMessage('Đang kết nối máy in và xuất bản ghi điểm dạng PDF...')
+    setTimeout(() => {
+      window.print()
+    }, 1000)
+  }
+
   return (
     <div className="app-layout">
       <Sidebar />
       <div className="main-wrapper">
         <Navbar title="Chi Tiết Điểm Học Tập" />
         <main className="main-content">
+          {message && <div className="alert alert-success" style={{ marginBottom: '15px' }}>{message}</div>}
+
           {loading ? (
             <p>Đang tải...</p>
           ) : !grade ? (
@@ -50,15 +60,11 @@ export default function GradeDetail() {
                     {grade.score}
                   </span>
                 </div>
-                {grade.notes && (
-                  <div style={{ marginTop: '10px', fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                    <strong>Ghi chú:</strong> {grade.notes}
-                  </div>
-                )}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <button className="btn btn-outline" onClick={() => navigate('/grades')}>Quay lại</button>
+                <button className="btn btn-primary" onClick={handlePrint}>In hoặc xuất PDF</button>
               </div>
             </div>
           )}

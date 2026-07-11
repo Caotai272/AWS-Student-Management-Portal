@@ -1,22 +1,20 @@
-// src/pages/Login.jsx
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { login, getSessionTokens } from '../services/authService'
+import { useNavigate, Link } from 'react-router-dom'
+import { login } from '../services/authService'
 
 export default function Login() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
+    setError('')
     try {
-      await login(username, password)
-      await getSessionTokens()
+      await login(email, password)
       navigate('/dashboard')
     } catch (err) {
       setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
@@ -26,39 +24,42 @@ export default function Login() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1 className="login-title">AWS Student Portal</h1>
-        <p className="login-subtitle">Đăng nhập để quản lý sinh viên</p>
-
-        {error && <div className="alert alert-danger">{error}</div>}
-
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Email</label>
+    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg-alt)' }}>
+      <div className="card" style={{ width: '400px', padding: '30px' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--color-primary)' }}>ĐĂNG NHẬP</h2>
+        {error && <div className="alert alert-danger" style={{ marginBottom: '15px' }}>{error}</div>}
+        <form onSubmit={handleLogin}>
+          <div className="form-group" style={{ marginBottom: '15px' }}>
+            <label className="form-label">Email / Tài khoản</label>
             <input
-              className="form-input"
               type="email"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin@example.com"
+              className="form-control"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nhapemail@example.com"
               required
             />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: '20px' }}>
             <label className="form-label">Mật khẩu</label>
             <input
-              className="form-input"
               type="password"
+              className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="********"
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-          </button>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            </button>
+            <Link to="/forgot-password" style={{ textAlign: 'center', textDecoration: 'none', fontSize: '14px', color: 'var(--color-primary)' }}>
+              Quên mật khẩu
+            </Link>
+          </div>
         </form>
       </div>
     </div>

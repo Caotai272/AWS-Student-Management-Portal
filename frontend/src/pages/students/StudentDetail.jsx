@@ -1,36 +1,33 @@
-// src/pages/StudentDetail.jsx
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { Pencil, Upload } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { Pencil, Upload, ArrowLeft } from 'lucide-react'
 import Layout from '../../components/Layout'
 import StatusBadge from '../../components/StatusBadge'
 import { getStudentById } from '../../services/studentService'
 import { getStudentDocuments } from '../../services/documentService'
+import { getUserRole } from '../../services/authService'
 
 export default function StudentDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [student, setStudent] = useState(null)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
+  const role = getUserRole() || 'Student'
+  const isAdmin = role === 'Admin'
+  const isTeacher = role === 'Staff' || role === 'Teacher'
 
   useEffect(() => {
     setLoading(true)
     Promise.all([
       getStudentById(id),
-      getStudentDocuments(id).catch((err) => {
-        console.error('Lỗi tải tài liệu:', err)
-        return { documents: [] }
-      })
+      getStudentDocuments(id).catch(() => ({ documents: [] }))
     ])
       .then(([studentRes, docRes]) => {
         setStudent(studentRes.data)
-        const docs = docRes.documents || docRes.data?.documents || []
-        setDocuments(docs)
+        setDocuments(docRes.documents || docRes.data?.documents || [])
       })
-      .catch((err) => {
-        console.error('Lỗi tải chi tiết sinh viên:', err)
-        setStudent(null)
-      })
+      .catch(() => setStudent(null))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -48,17 +45,21 @@ export default function StudentDetail() {
     ['Lớp', student.className]
   ]
 
-
-
   return (
     <Layout title="Student Detail">
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
-          <h1 className="page-title">{student.fullName}</h1>
+          <h1 className="page-title" style={{ margin: 0 }}>{student.fullName}</h1>
           <p className="page-description">Mã sinh viên: {student.studentId}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <StatusBadge status={student.status} />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {(isAdmin || isTeacher) && (
+            <>
+              <Link to={`/students/${id}/edit`} className="btn btn-primary"><Pencil size={16} /> Chỉnh sửa</Link>
+              <Link to="/grades" className="btn btn-outline">Xem điểm</Link>
+            </>
+          )}
+          <button className="btn btn-secondary" onClick={() => navigate(-1)}><ArrowLeft size={16} /> Quay lại</button>
         </div>
       </div>
 
@@ -72,18 +73,19 @@ export default function StudentDetail() {
             </div>
           ))}
         </div>
-        <div className="page-actions">
-          <Link to={`/students/${id}/edit`} className="btn btn-primary"><Pencil size={16} /> Sửa thông tin</Link>
-          <Link to={`/students/${id}/documents`} className="btn btn-secondary"><Upload size={16} /> Quản lý hồ sơ</Link>
-        </div>
       </div>
 
       <div className="card">
-        <h2 className="card-title">Danh sách hồ sơ</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <h2 className="card-title" style={{ margin: 0 }}>Danh sách hồ sơ học bạ (S3 Bucket)</h2>
+          {(isAdmin || isTeacher) && (
+            <Link to={`/students/${id}/documents`} className="btn btn-outline btn-sm"><Upload size={16} /> Upload hồ sơ</Link>
+          )}
+        </div>
         {documents.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-title">Chưa có hồ sơ</div>
-            <div className="empty-state-description">Sinh viên này chưa upload tài liệu nào.</div>
+            <div className="empty-state-description">Chưa có tệp tin học bạ nào được upload.</div>
           </div>
         ) : (
           <div className="table-wrapper">

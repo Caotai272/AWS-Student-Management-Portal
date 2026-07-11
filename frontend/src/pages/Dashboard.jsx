@@ -63,38 +63,13 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '24px' }}>
-                  <div className="card">
-                    <h3 className="card-title">Giảng viên mới thêm</h3>
-                    <table className="table" style={{ width: '100%' }}>
-                      <thead>
-                        <tr><th>Mã GV</th><th>Họ tên</th><th>Khoa</th></tr>
-                      </thead>
-                      <tbody>
-                        {teachers.slice(0, 3).map((t, idx) => (
-                          <tr key={idx} style={{ borderTop: '1px solid var(--color-border)' }}>
-                            <td>{t.teacherId}</td>
-                            <td>{t.fullName}</td>
-                            <td>{t.department}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="card">
-                    <h3 className="card-title">Thao tác nhanh Admin</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <Link to="/admin/users/create" className="btn btn-primary" style={{ textAlign: 'center', textDecoration: 'none' }}>
-                        Tạo tài khoản mới (Cognito)
-                      </Link>
-                      <Link to="/admin/users" className="btn btn-outline" style={{ textAlign: 'center', textDecoration: 'none' }}>
-                        Xem tất cả tài khoản
-                      </Link>
-                      <Link to="/admin/logs" className="btn btn-outline" style={{ textAlign: 'center', textDecoration: 'none' }}>
-                        Xem CloudWatch Live Logs
-                      </Link>
-                    </div>
+                <div className="card" style={{ marginTop: '24px' }}>
+                  <h3 className="card-title">Phím tắt nhanh Admin</h3>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <Link to="/admin/users" className="btn btn-primary" style={{ textDecoration: 'none' }}>Xem tài khoản</Link>
+                    <Link to="/admin/students" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem sinh viên</Link>
+                    <Link to="/admin/teachers" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem giáo viên</Link>
+                    <Link to="/admin/logs" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem nhật ký</Link>
                   </div>
                 </div>
               </>
@@ -137,11 +112,12 @@ export default function Dashboard() {
                 </div>
 
                 <div className="card" style={{ marginTop: '24px' }}>
-                  <h3 className="card-title font-semibold">Phím tắt giảng dạy</h3>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <Link to="/classes" className="btn btn-primary" style={{ textDecoration: 'none' }}>Quản lý lớp học</Link>
-                    <Link to="/grades/new" className="btn btn-outline" style={{ textDecoration: 'none' }}>Nhập điểm thi</Link>
-                    <Link to="/materials/upload" className="btn btn-outline" style={{ textDecoration: 'none' }}>Upload slide tài liệu</Link>
+                  <h3 className="card-title">Phím tắt giảng dạy</h3>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <Link to="/classes" className="btn btn-primary" style={{ textDecoration: 'none' }}>Xem lớp</Link>
+                    <Link to="/grades" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem điểm</Link>
+                    <Link to="/materials" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem tài liệu</Link>
+                    <Link to="/notifications" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem thông báo</Link>
                   </div>
                 </div>
               </>
@@ -164,18 +140,13 @@ export default function Dashboard() {
             <p style={{ color: 'var(--color-text-muted)' }}>Bạn đang đăng nhập với quyền hạn Sinh viên.</p>
           </div>
 
-          <div className="stats-grid" style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div className="stat-card">
-              <div className="stat-label">Kết Quả Học Tập</div>
-              <Link to="/grades" className="btn btn-link" style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-primary)', textDecoration: 'none', display: 'block', marginTop: '8px' }}>
-                Xem bảng điểm
-              </Link>
-            </div>
-            <div className="stat-card">
-              <div className="stat-label">Tài Liệu Học Tập</div>
-              <Link to="/materials" className="btn btn-link" style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-primary)', textDecoration: 'none', display: 'block', marginTop: '8px' }}>
-                Tải slide bài giảng
-              </Link>
+          <div className="card" style={{ maxWidth: '600px', margin: '0 auto 24px' }}>
+            <h3 className="card-title">Menu thao tác sinh viên</h3>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <Link to="/profile" className="btn btn-primary" style={{ textDecoration: 'none' }}>Xem hồ sơ</Link>
+              <Link to="/grades" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem điểm</Link>
+              <Link to="/materials" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem tài liệu</Link>
+              <Link to="/notifications" className="btn btn-outline" style={{ textDecoration: 'none' }}>Xem thông báo</Link>
             </div>
           </div>
         </main>
