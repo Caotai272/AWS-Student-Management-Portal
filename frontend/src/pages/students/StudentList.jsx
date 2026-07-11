@@ -6,10 +6,14 @@ import Layout from '../../components/Layout'
 import StatusBadge from '../../components/StatusBadge'
 import ConfirmModal from '../../components/ConfirmModal'
 import { getStudents, deleteStudent } from '../../services/studentService'
+import { getUserRole } from '../../services/authService'
 
 const STATUS_FILTERS = ['All', 'Active', 'Inactive', 'Graduated', 'Warning']
 
 export default function StudentList() {
+  const role = getUserRole() || 'Student'
+  const isAdmin = role === 'Admin'
+
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -72,7 +76,9 @@ export default function StudentList() {
           <h1 className="page-title">Sinh viên</h1>
           <p className="page-description">Quản lý thông tin sinh viên trong hệ thống.</p>
         </div>
-        <Link to="/students/new" className="btn btn-primary"><Plus size={16} /> Thêm sinh viên</Link>
+        {isAdmin && (
+          <Link to="/students/new" className="btn btn-primary"><Plus size={16} /> Thêm sinh viên</Link>
+        )}
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -133,7 +139,9 @@ export default function StudentList() {
                     <div className="table-actions">
                       <Link to={`/students/${s.id || s.studentId}`} className="btn btn-secondary btn-icon" title="Xem"><Eye size={16} /></Link>
                       <Link to={`/students/${s.id || s.studentId}/edit`} className="btn btn-secondary btn-icon" title="Sửa"><Pencil size={16} /></Link>
-                      <button className="btn btn-danger btn-icon" title="Xóa" onClick={() => setToDelete(s)}><Trash2 size={16} /></button>
+                      {isAdmin && (
+                        <button className="btn btn-danger btn-icon" title="Xóa" onClick={() => setToDelete(s)}><Trash2 size={16} /></button>
+                      )}
                     </div>
                   </td>
                 </tr>

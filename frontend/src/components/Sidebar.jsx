@@ -29,9 +29,16 @@ export default function Sidebar() {
     menuLinks.push({ to: '/grades', label: 'Xem điểm số', icon: FileText })
   }
 
+  // Giáo viên phụ trách lớp học
+  if (role === 'Staff' || role === 'Teacher') {
+    menuLinks.push({ to: '/classes', label: 'Lớp phụ trách', icon: Users })
+  }
+
   // Quyền quản lý Giáo viên (Chỉ Admin)
   if (role === 'Admin') {
     menuLinks.push({ to: '/teachers', label: 'Giáo viên', icon: GraduationCap })
+    menuLinks.push({ to: '/admin/students', label: 'Sinh viên (Xem)', icon: Users })
+    menuLinks.push({ to: '/admin/teachers', label: 'Giáo viên (Xem)', icon: GraduationCap })
   }
 
   // Tài liệu học tập (Mọi người)

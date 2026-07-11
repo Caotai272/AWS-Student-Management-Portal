@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Sidebar from '../../components/Sidebar'
 
@@ -29,8 +30,9 @@ export default function AdminUsers() {
       <div className="main-wrapper">
         <Navbar title="Quản Lý Tài Khoản Người Dùng" />
         <main className="main-content">
-          <div className="page-header">
-            <h2 className="page-title">Cognito Users</h2>
+          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 className="page-title" style={{ margin: 0 }}>Cognito Users</h2>
+            <Link to="/admin/users/create" className="btn btn-primary">Thêm tài khoản</Link>
           </div>
 
           {message && <div className="alert alert-success">{message}</div>}
@@ -66,12 +68,16 @@ export default function AdminUsers() {
                       </span>
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button 
-                        className={`btn btn-sm ${user.enabled ? 'btn-danger' : 'btn-primary'}`}
-                        onClick={() => handleToggleEnable(user.username)}
-                      >
-                        {user.enabled ? 'Disable' : 'Enable'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <Link to={`/admin/users/${user.username}`} className="btn btn-sm btn-outline">Xem</Link>
+                        <Link to={`/admin/users/${user.username}/edit`} className="btn btn-sm btn-secondary">Sửa</Link>
+                        <button 
+                          className={`btn btn-sm ${user.enabled ? 'btn-danger' : 'btn-primary'}`}
+                          onClick={() => handleToggleEnable(user.username)}
+                        >
+                          {user.enabled ? 'Disable' : 'Enable'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
