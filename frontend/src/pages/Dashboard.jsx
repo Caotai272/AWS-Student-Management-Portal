@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import { getStudents } from '../services/studentService'
@@ -7,11 +7,18 @@ import { getUserRole, getUserEmail } from '../services/authService'
 import api from '../services/api'
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [students, setStudents] = useState([])
   const [teachers, setTeachers] = useState([])
   const [loading, setLoading] = useState(true)
   const role = getUserRole() || 'Admin'
   const email = getUserEmail() || 'User'
+
+  useEffect(() => {
+    if (role === 'Admin') {
+      navigate('/admin/dashboard')
+    }
+  }, [role, navigate])
 
   useEffect(() => {
     const loadStats = async () => {

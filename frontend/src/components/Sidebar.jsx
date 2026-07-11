@@ -17,31 +17,26 @@ export default function Sidebar() {
 
   // Khởi tạo danh sách link dựa trên role
   const menuLinks = [
-    { to: '/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
+    { to: role === 'Admin' ? '/admin/dashboard' : '/dashboard', label: 'Tổng quan', icon: LayoutDashboard },
     { to: '/profile', label: 'Hồ sơ cá nhân', icon: User }
   ]
 
-  // Quyền truy cập quản lý Sinh viên / Điểm số
-  if (role === 'Admin' || role === 'Staff' || role === 'Teacher') {
+  // Phân quyền truy cập quản lý Sinh viên / Giáo viên / Điểm số
+  if (role === 'Staff' || role === 'Teacher') {
     menuLinks.push({ to: '/students', label: 'Sinh viên', icon: Users })
+    menuLinks.push({ to: '/classes', label: 'Lớp phụ trách', icon: Users })
     menuLinks.push({ to: '/grades', label: 'Điểm số', icon: FileText })
+    menuLinks.push({ to: '/teacher-grades', label: 'Điểm tôi quản lý', icon: FileText })
+  } else if (role === 'Admin') {
+    // Admin xem danh sách sinh viên & giáo viên ở chế độ chỉ đọc như tài liệu thiết kế
+    menuLinks.push({ to: '/admin/students', label: 'Sinh viên (Xem)', icon: Users })
+    menuLinks.push({ to: '/admin/teachers', label: 'Giáo viên (Xem)', icon: GraduationCap })
+    menuLinks.push({ to: '/grades', label: 'Xem Điểm số', icon: FileText })
   } else if (role === 'Student') {
     menuLinks.push({ to: '/grades', label: 'Xem điểm số', icon: FileText })
   }
 
-  // Giáo viên phụ trách lớp học
-  if (role === 'Staff' || role === 'Teacher') {
-    menuLinks.push({ to: '/classes', label: 'Lớp phụ trách', icon: Users })
-  }
-
-  // Quyền quản lý Giáo viên (Chỉ Admin)
-  if (role === 'Admin') {
-    menuLinks.push({ to: '/teachers', label: 'Giáo viên', icon: GraduationCap })
-    menuLinks.push({ to: '/admin/students', label: 'Sinh viên (Xem)', icon: Users })
-    menuLinks.push({ to: '/admin/teachers', label: 'Giáo viên (Xem)', icon: GraduationCap })
-  }
-
-  // Tài liệu học tập (Mọi người)
+  // Tài liệu học tập và thông báo (Mọi người)
   menuLinks.push({ to: '/materials', label: 'Tài liệu học tập', icon: FileText })
   menuLinks.push({ to: '/notifications', label: 'Thông báo', icon: Bell })
 

@@ -76,7 +76,7 @@ export default function StudentList() {
           <h1 className="page-title">Sinh viên</h1>
           <p className="page-description">Quản lý thông tin sinh viên trong hệ thống.</p>
         </div>
-        {isAdmin && (
+        {(role === 'Admin' || role === 'Staff' || role === 'Teacher') && (
           <Link to="/students/new" className="btn btn-primary"><Plus size={16} /> Thêm sinh viên</Link>
         )}
       </div>

@@ -38,6 +38,7 @@ import StudentMaterials from './pages/materials/StudentMaterials'
 import MaterialEdit from './pages/materials/MaterialEdit'
 import MaterialDetail from './pages/materials/MaterialDetail'
 
+import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminRoles from './pages/admin/AdminRoles'
 import AdminLogs from './pages/admin/AdminLogs'
@@ -47,6 +48,8 @@ import AdminUserDetail from './pages/admin/AdminUserDetail'
 import AdminUserEdit from './pages/admin/AdminUserEdit'
 import AdminStudentList from './pages/admin/AdminStudentList'
 import AdminTeacherList from './pages/admin/AdminTeacherList'
+import AdminStudentCreate from './pages/admin/AdminStudentCreate'
+import AdminTeacherCreate from './pages/admin/AdminTeacherCreate'
 
 import ClassList from './pages/teachers/ClassList'
 import ClassDetail from './pages/teachers/ClassDetail'
@@ -141,12 +144,15 @@ export default function App() {
                   <Route path="/materials/:id" element={<MaterialDetail />} />
                   <Route path="/materials/:id/edit" element={<MaterialEdit />} />
                   
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/users/create" element={<AdminUserCreate />} />
                   <Route path="/admin/users/:username" element={<AdminUserDetail />} />
                   <Route path="/admin/users/:username/edit" element={<AdminUserEdit />} />
                   <Route path="/admin/students" element={<AdminStudentList />} />
+                  <Route path="/admin/students/new" element={<AdminStudentCreate />} />
                   <Route path="/admin/teachers" element={<AdminTeacherList />} />
+                  <Route path="/admin/teachers/new" element={<AdminTeacherCreate />} />
                   <Route path="/admin/roles" element={<AdminRoles />} />
                   <Route path="/admin/logs" element={<AdminLogs />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />

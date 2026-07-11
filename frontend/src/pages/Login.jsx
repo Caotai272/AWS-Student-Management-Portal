@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { login } from '../services/authService'
+import { login, getUserRole } from '../services/authService'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -15,7 +15,12 @@ export default function Login() {
     setError('')
     try {
       await login(email, password)
-      navigate('/dashboard')
+      const role = getUserRole()
+      if (role === 'Admin') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
     } finally {

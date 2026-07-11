@@ -44,7 +44,10 @@ export default function AdminTeacherList() {
         <main className="main-content">
           <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h2 className="page-title" style={{ margin: 0 }}>Đội Ngũ Giảng Viên</h2>
-            <button className="btn btn-outline" onClick={handleRefresh}>Làm mới</button>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-outline" onClick={handleRefresh}>Làm mới</button>
+              <Link to="/admin/teachers/new" className="btn btn-primary">Thêm giáo viên</Link>
+            </div>
           </div>
 
           {message && <div className="alert alert-success" style={{ marginBottom: '15px' }}>{message}</div>}
