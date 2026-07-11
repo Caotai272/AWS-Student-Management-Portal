@@ -17,9 +17,14 @@ const baseHandler = async (event) => {
       fullName: data.fullName,
       email: data.email,
       phone: data.phone || '',
+      gender: data.gender || '',
+      dateOfBirth: data.dateOfBirth || '',
       major: data.major || '',
+      className: data.className || '',
+      status: data.status || 'Active',
       gpa: data.gpa !== undefined ? Number(data.gpa) : null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
 
     await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: item }))

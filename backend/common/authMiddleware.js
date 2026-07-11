@@ -5,7 +5,7 @@
 
 import jwt from 'jsonwebtoken'
 import jwksRsa from 'jwks-rsa'
-import { CognitoIdentityProvider, GetUserCommand } from '@aws-sdk/client-cognito-identity-provider'
+import { CognitoIdentityProvider, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider'
 
 const cognitoClient = new CognitoIdentityProvider({ region: process.env.AWS_REGION || 'us-east-1' })
 
@@ -72,18 +72,16 @@ export const verifyCognitoToken = async (event) => {
     const decodedToken = await verifyToken(token)
 
     // Lấy thông tin user từ Cognito
-    const user = await getUserFromCognito(decodedToken.sub)
+    let user = await getUserFromCognito(decodedToken.sub)
 
     if (!user) {
-      return {
-        statusCode: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-        },
-        body: JSON.stringify({ success: false, message: 'Token không hợp lệ hoặc user không tồn tại' })
+      console.warn('⚠️ Không thể lấy thông tin từ Cognito API (có thể do thiếu quyền IAM), sử dụng claims trực tiếp từ JWT.')
+      user = {
+        Username: decodedToken.sub || decodedToken.username || 'unknown',
+        Attributes: [
+          { Name: 'email', Value: decodedToken.email || '' }
+        ],
+        UserGroups: decodedToken['cognito:groups'] || []
       }
     }
 
@@ -119,8 +117,8 @@ export const verifyCognitoToken = async (event) => {
 async function verifyToken(token) {
   try {
     // Decode header để lấy key ID
-    const decodedHeader = jwt.decode(token, { header: true })
-    const kid = decodedHeader.kid
+    const decoded = jwt.decode(token, { complete: true })
+    const kid = decoded?.header?.kid
 
     // Lấy JWKS client
     const client = await getJwksClient()
@@ -144,7 +142,7 @@ async function verifyToken(token) {
 
 async function getUserFromCognito(userSub) {
   try {
-    const command = new GetUserCommand({
+    const command = new AdminGetUserCommand({
       UserPoolId: userPoolId,
       Username: userSub
     })
@@ -153,9 +151,9 @@ async function getUserFromCognito(userSub) {
 
     // Map Cognito User attributes
     const user = {
-      Username: response.User.Username,
-      UserGroups: response.User.UserGroups || [],
-      Attributes: response.User.Attributes || []
+      Username: response.Username || response.User?.Username || userSub,
+      UserGroups: response.UserGroups || [],
+      Attributes: response.UserAttributes || response.User?.Attributes || []
     }
 
     return user
@@ -168,52 +166,67 @@ async function getUserFromCognito(userSub) {
 // Middleware wrapper cho Lambda handlers
 export const withAuth = (handler) => {
   return async (event) => {
-    // Xác thực token
-    const authResult = await verifyCognitoToken(event)
-    if (authResult.statusCode) {
-      return authResult
+    // Xác thực token nếu chưa xác thực trước đó
+    if (!event.requestContext?.authorizer?.user) {
+      const authResult = await verifyCognitoToken(event)
+      if (authResult.statusCode) {
+        return authResult
+      }
+      event = authResult
     }
 
     // Gọi handler với event đã xác thực
-    return handler(authResult)
+    return handler(event)
   }
 }
 
 // Helper để kiểm tra role permissions
 export const requireRole = (requiredRole) => {
-  return (event) => {
-    const user = event.requestContext?.authorizer?.user
-    if (!user) {
-      return {
-        statusCode: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-        },
-        body: JSON.stringify({ success: false, message: 'Không có quyền truy cập' })
+  return (handler) => {
+    return async (event) => {
+      // Tự động xác thực token nếu chưa gọi qua withAuth trước đó
+      if (!event.requestContext?.authorizer?.user) {
+        const authResult = await verifyCognitoToken(event)
+        if (authResult.statusCode) {
+          return authResult
+        }
+        event = authResult
       }
-    }
 
-    if (!requiredRole) {
-      return event // Không yêu cầu role cụ thể
-    }
-
-    const userGroups = user.cognitoGroups || []
-    if (!userGroups.includes(requiredRole)) {
-      return {
-        statusCode: 403,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
-        },
-        body: JSON.stringify({ success: false, message: 'Không có quyền truy cập' })
+      const user = event.requestContext?.authorizer?.user
+      if (!user) {
+        return {
+          statusCode: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+          },
+          body: JSON.stringify({ success: false, message: 'Không có quyền truy cập' })
+        }
       }
-    }
 
-    return event
+      if (!requiredRole) {
+        return handler(event) // Không yêu cầu role cụ thể
+      }
+
+      const userGroups = user.cognitoGroups || []
+      // Cho phép Admin và Staff tự động bypass mọi quyền kiểm tra
+      if (!userGroups.includes(requiredRole) && !userGroups.includes('Admin') && !userGroups.includes('Staff')) {
+        return {
+          statusCode: 403,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+          },
+          body: JSON.stringify({ success: false, message: 'Không có quyền truy cập' })
+        }
+      }
+
+      return handler(event)
+    }
   }
 }

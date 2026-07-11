@@ -10,16 +10,17 @@ const baseHandler = async (event) => {
 
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
 
-    const fields = ['fullName', 'email', 'phone', 'major', 'gpa']
+    const fields = ['fullName', 'email', 'phone', 'gender', 'dateOfBirth', 'major', 'className', 'status', 'gpa']
     const updates = []
     const values = {}
     for (const f of fields) {
       if (data[f] !== undefined) {
         updates.push(`${f} = :${f}`)
-        values[`:${f}` = f] = f === 'gpa' ? Number(data[f]) : data[f]
+        values[`:${f}`] = f === 'gpa' ? (data[f] !== null ? Number(data[f]) : null) : data[f]
       }
     }
-    if (updates.length === 0) return error('Không có trường nào để cập nhật', 400)
+    updates.push('updatedAt = :updatedAt')
+    values[':updatedAt'] = new Date().toISOString()
 
     const res = await docClient.send(
       new UpdateCommand({

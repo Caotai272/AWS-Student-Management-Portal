@@ -20,7 +20,9 @@ const baseHandler = async (event) => {
       phone: data.phone || '',
       department: data.department,
       degree: data.degree || '',
-      createdAt: new Date().toISOString()
+      subject: data.subject || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
 
     await docClient.send(new PutCommand({ TableName: TABLE.TEACHERS, Item: item }))

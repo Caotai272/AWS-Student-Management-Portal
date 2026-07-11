@@ -1,7 +1,7 @@
 // common/response.js
 // Utilities chuẩn hóa response cho API Gateway (tuân theo README spec)
 
-module.exports.success = (data, statusCode = 200) => ({
+export const success = (data, statusCode = 200) => ({
   statusCode,
   headers: {
     'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ module.exports.success = (data, statusCode = 200) => ({
   })
 })
 
-module.exports.error = (message, statusCode = 500) => ({
+export const error = (message, statusCode = 500) => ({
   statusCode,
   headers: {
     'Content-Type': 'application/json',
@@ -30,3 +30,5 @@ module.exports.error = (message, statusCode = 500) => ({
     error: message
   })
 })
+
+export default { success, error }

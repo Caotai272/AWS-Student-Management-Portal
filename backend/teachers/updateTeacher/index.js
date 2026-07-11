@@ -9,7 +9,7 @@ const baseHandler = async (event) => {
     if (!id) return error('Thiếu id', 400)
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
 
-    const fields = ['fullName', 'email', 'phone', 'department', 'degree']
+    const fields = ['fullName', 'email', 'phone', 'department', 'degree', 'subject']
     const updates = []
     const values = {}
     for (const f of fields) {
@@ -18,7 +18,8 @@ const baseHandler = async (event) => {
         values[`:${f}`] = data[f]
       }
     }
-    if (updates.length === 0) return error('Không có trường nào để cập nhật', 400)
+    updates.push('updatedAt = :updatedAt')
+    values[':updatedAt'] = new Date().toISOString()
 
     const res = await docClient.send(new UpdateCommand({
       TableName: TABLE.TEACHERS,
