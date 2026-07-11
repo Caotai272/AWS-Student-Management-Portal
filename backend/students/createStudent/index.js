@@ -1,14 +1,13 @@
-// students/createStudent/index.js
 import { PutCommand } from '@aws-sdk/lib-dynamodb'
 import { docClient, TABLE_NAME } from '../../common/dynamodb'
 import { success, error } from '../../common/response'
 import { validateStudent } from '../../common/validators'
 import { sendMessage } from '../../common/sqs'
+import { withAuth, requireRole } from '../../common/authMiddleware'
 
-export const handler = async (event) => {
+const handler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
-
     const errors = validateStudent(data)
     if (errors.length > 0) return error(errors.join('; '), 400)
 
@@ -34,3 +33,9 @@ export const handler = async (event) => {
     return error(err.message || 'Lỗi máy chủ', 500)
   }
 }
+
+// Áp dụng middleware auth và RBAC
+const authHandler = withAuth(handler)
+const authAndRoleHandler = requireRole('Staff')(authHandler)
+
+export const handler = authAndRoleHandler

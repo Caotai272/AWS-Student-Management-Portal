@@ -1,13 +1,36 @@
 // backend/common/authMiddleware.js
 // Middleware để xác thực JWT token từ Cognito Authorizer cho Lambda API Gateway
 // Hỗ trợ cả API Gateway REST API (Authorization header) và HTTP API (authorizer.claims)
+// Bao gồm JWT validation thực sự bằng cách gọi Cognito API và RBAC enforcement
 
-import { CognitoIdentityProviderService } from '@aws-sdk/client-cognito-identity-provider'
+import jwt from 'jsonwebtoken'
+import jwksRsa from 'jwks-rsa'
+import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider'
 
-const cognitoClient = new CognitoIdentityProviderService({ region: process.env.AWS_REGION || 'us-east-1' })
+const cognitoClient = new CognitoIdentityProvider({ region: process.env.AWS_REGION || 'us-east-1' })
 
 const userPoolId = process.env.COGNITO_USER_POOL_ID || ''
 const userPoolClientId = process.env.COGNITO_USER_POOL_CLIENT_ID || ''
+const userPoolRegion = process.env.AWS_REGION || 'us-east-1'
+
+// Cache cho JWKS để tránh gọi API liên tục
+let jwksClient = null
+let cachedJwks = null
+const JWKS_CACHE_TTL = 3600000 // 1 hour
+
+async function getJwksClient() {
+  if (!jwksClient || Date.now() - cachedJwks.timestamp > JWKS_CACHE_TTL) {
+    try {
+      const domain = `https://cognito-idp.${userPoolRegion}.amazonaws.com/${userPoolId}/.well-known/jwks.json`
+      jwksClient = jwksRsa({ jwksUri: domain })
+      cachedJwks = { timestamp: Date.now() }
+    } catch (error) {
+      console.error('Failed to fetch JWKS:', error)
+      throw error
+    }
+  }
+  return jwksClient
+}
 
 export const verifyCognitoToken = async (event) => {
   try {
@@ -19,9 +42,12 @@ export const verifyCognitoToken = async (event) => {
       token = event.headers.Authorization
     }
 
-    // Cách 2: HTTP API - claims từ authorizer
+    // Cách 2: HTTP API - claims từ authorizer (legacy mode)
     if (!token && event.requestContext?.authorizer?.claims) {
-      token = event.requestContext.authorizer.claims
+      // Nếu API Gateway đã verified token, chúng ta trust claims
+      // Nhưng vẫn verify token nếu có sẵn
+      const claims = event.requestContext.authorizer.claims
+      token = claims.id_token || claims.access_token || token
     }
 
     if (!token) {
@@ -29,43 +55,48 @@ export const verifyCognitoToken = async (event) => {
         statusCode: 401,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
         },
         body: JSON.stringify({ success: false, message: 'Thiếu Authorization header' })
       }
     }
 
-    // Xử lý token JWT
-    // Với Cognito Authorizer, event.requestContext.authorizer.claims đã là claims object
-    if (event.requestContext?.authorizer?.claims) {
-      // claims đã là object (JWT payload)
-      const claims = event.requestContext.authorizer.claims
-
-      // Thêm user context vào event
-      event.requestContext.authorizer.user = {
-        username: claims.email || claims['cognito:username'] || claims.sub,
-        email: claims.email,
-        cognitoGroups: claims['cognito:groups'] || [],
-        token: claims
-      }
-
-      return event
-    }
-
-    // Xử lý string token (Authorization header)
+    // Trích xuất token từ Bearer prefix
     if (typeof token === 'string' && token.startsWith('Bearer ')) {
       token = token.substring(7)
     }
 
-    // Xác thực bằng cách gọi Cognito API
-    // Note: Trong production, bạn có thể cache verification results
-    // Để đơn giản, chúng ta giả định token đã được xác thực bởi Cognito Authorizer
-    // Thêm user context
+    // Xác minh token
+    const decodedToken = await verifyToken(token)
+
+    // Lấy thông tin user từ Cognito
+    const user = await getUserFromCognito(decodedToken.sub)
+
+    if (!user) {
+      return {
+        statusCode: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+        },
+        body: JSON.stringify({ success: false, message: 'Token không hợp lệ hoặc user không tồn tại' })
+      }
+    }
+
+    // Thêm user context vào event
+    if (!event.requestContext.authorizer) {
+      event.requestContext.authorizer = {}
+    }
+
     event.requestContext.authorizer.user = {
-      username: event.requestContext.authorizer.claims?.email || event.requestContext.authorizer.claims?.['cognito:username'],
-      email: event.requestContext.authorizer.claims?.email,
-      cognitoGroups: event.requestContext.authorizer.claims?.['cognito:groups'] || [],
-      token: token
+      username: user.Username,
+      email: user.Attributes?.find(attr => attr.Name === 'email')?.Value || '',
+      cognitoGroups: user.UserGroups || [],
+      token: decodedToken
     }
 
     return event
@@ -73,13 +104,64 @@ export const verifyCognitoToken = async (event) => {
   } catch (error) {
     console.error('Cognito token verification error:', error)
     return {
-      statusCode: 500,
+      statusCode: 401,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
       },
-      body: JSON.stringify({ success: false, message: 'Lỗi xác thực token' })
+      body: JSON.stringify({ success: false, message: 'Xác thực token thất bại' })
     }
+  }
+}
+
+async function verifyToken(token) {
+  try {
+    // Decode header to get key ID
+    const decodedHeader = jwt.decode(token, { header: true })
+    const kid = decodedHeader.kid
+
+    // Lấy JWKS client
+    const client = await getJwksClient()
+
+    // Lấy public key từ JWKS
+    const publicKey = await client.getSigningKey(kid)
+    const signingKey = publicKey.getPublicKey()
+
+    // Xác minh token
+    const decodedToken = jwt.verify(token, signingKey, {
+      audience: userPoolClientId,
+      issuer: `https://cognito-idp.${userPoolRegion}.amazonaws.com/${userPoolId}`
+    })
+
+    return decodedToken
+  } catch (error) {
+    console.error('JWT verification failed:', error.message)
+    throw new Error('JWT verification failed')
+  }
+}
+
+async function getUserFromCognito(userSub) {
+  try {
+    const command = new GetUserCommand({
+      UserPoolId: userPoolId,
+      Username: userSub
+    })
+
+    const response = await cognitoClient.send(command)
+
+    // Map Cognito User attributes
+    const user = {
+      Username: response.User.Username,
+      UserGroups: response.User.UserGroups || [],
+      Attributes: response.User.Attributes || []
+    }
+
+    return user
+  } catch (error) {
+    console.error('Failed to get user from Cognito:', error)
+    return null
   }
 }
 
@@ -104,7 +186,12 @@ export const requireRole = (requiredRole) => {
     if (!user) {
       return {
         statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+        },
         body: JSON.stringify({ success: false, message: 'Không có quyền truy cập' })
       }
     }
@@ -117,7 +204,12 @@ export const requireRole = (requiredRole) => {
     if (!userGroups.includes(requiredRole)) {
       return {
         statusCode: 403,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+          'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,DELETE'
+        },
         body: JSON.stringify({ success: false, message: 'Không có quyền truy cập' })
       }
     }

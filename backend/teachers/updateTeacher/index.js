@@ -1,9 +1,9 @@
-// teachers/updateTeacher/index.js
 import { UpdateCommand } from '@aws-sdk/lib-dynamodb'
 import { docClient, TABLE } from '../../common/dynamodb'
 import { success, error } from '../../common/response'
+import { withAuth, requireRole } from '../../common/authMiddleware'
 
-export const handler = async (event) => {
+const handler = async (event) => {
   try {
     const id = event.pathParameters?.id
     if (!id) return error('Thiếu id', 400)
@@ -33,3 +33,9 @@ export const handler = async (event) => {
     return error(err.message || 'Lỗi máy chủ', 500)
   }
 }
+
+// Áp dụng middleware auth và RBAC
+const authHandler = withAuth(handler)
+const authAndRoleHandler = requireRole('Admin')(authHandler)
+
+export const handler = authAndRoleHandler
