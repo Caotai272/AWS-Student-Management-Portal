@@ -10,23 +10,14 @@ const handler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
 
-    // Support both new /students/:studentId/documents and old /documents/metadata
-    // New format: POST /students/:studentId/documents
-    // Old format: POST /documents/metadata
-
     let studentId = data.studentId
     let documentId = data.documentId
 
-    // Support new endpoint format with path parameters
     if (!studentId && event.pathParameters?.studentId) {
       studentId = event.pathParameters.studentId
     }
 
     if (!studentId) return error('Thiếu studentId', 400)
-
-    // Định nghĩa endpoint thực tế theo README
-    // README: POST /students/:studentId/documents
-    // Body: { documentId, fileName, fileType, s3Key }
 
     const {
       documentId: docIdParam,
@@ -35,15 +26,14 @@ const handler = async (event) => {
       s3Key,
       fileUrl,
       bucketName,
-      uploadedBy
+      uploadedBy,
+      documentId: bodyDocId
     } = data
 
-    // Sử dụng documentId từ path parameters nếu có
-    const actualDocumentId = docIdParam || documentId || `DOC${Date.now()}`
+    const actualDocumentId = docIdParam || documentId || bodyDocId || `DOC${Date.now()}`
 
     if (!fileName || !s3Key) return error('Thiếu fileName hoặc s3Key', 400)
 
-    // Xây dựng object theo thiết kế DynamoDB trong README
     const item = {
       id: `${studentId}-${actualDocumentId}`,  // Composite ID
       studentId,                                 // Partition Key
@@ -57,13 +47,11 @@ const handler = async (event) => {
       uploadedBy: uploadedBy || 'unknown'
     }
 
-    // Lưu vào DynamoDB
     await docClient.send(new PutCommand({
       TableName: DOCUMENTS_TABLE,
       Item: item
     }))
 
-    // Gửi thông báo email qua SQS worker
     await sendMessage({
       type: 'DOCUMENT_UPLOADED',
       document: item
@@ -80,7 +68,7 @@ const handler = async (event) => {
   }
 }
 
-// Áp dụng middleware auth và RBAC
+// Áp dụng middleware auth: dùng requireRole('Student') theo README §8.2
 const authHandler = withAuth(handler)
 const authAndRoleHandler = requireRole('Student')(authHandler)
 
