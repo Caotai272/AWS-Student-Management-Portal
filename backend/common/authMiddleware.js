@@ -5,7 +5,7 @@
 
 import jwt from 'jsonwebtoken'
 import jwksRsa from 'jwks-rsa'
-import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider'
+import { CognitoIdentityProvider, GetUserCommand } from '@aws-sdk/client-cognito-identity-provider'
 
 const cognitoClient = new CognitoIdentityProvider({ region: process.env.AWS_REGION || 'us-east-1' })
 
@@ -44,7 +44,7 @@ export const verifyCognitoToken = async (event) => {
 
     // Cách 2: HTTP API - claims từ authorizer (legacy mode)
     if (!token && event.requestContext?.authorizer?.claims) {
-      // Nếu API Gateway đã verified token, chúng ta trust claims
+      // Nếu API Gateway đã verify token, chúng ta trust claims
       // Nhưng vẫn verify token nếu có sẵn
       const claims = event.requestContext.authorizer.claims
       token = claims.id_token || claims.access_token || token
@@ -118,7 +118,7 @@ export const verifyCognitoToken = async (event) => {
 
 async function verifyToken(token) {
   try {
-    // Decode header to get key ID
+    // Decode header để lấy key ID
     const decodedHeader = jwt.decode(token, { header: true })
     const kid = decodedHeader.kid
 

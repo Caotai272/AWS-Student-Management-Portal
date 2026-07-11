@@ -1,12 +1,12 @@
-// backend/documents/saveDocumentMetadata/index.js
 import { PutCommand } from '@aws-sdk/lib-dynamodb'
 import { docClient } from '../../common/dynamodb'
 import { success, error } from '../../common/response'
 import { sendMessage } from '../../common/sqs'
+import { withAuth, requireRole } from '../../common/authMiddleware'
 
 const DOCUMENTS_TABLE = process.env.DOCUMENTS_TABLE || 'StudentDocuments'
 
-export const handler = async (event) => {
+const handler = async (event) => {
   try {
     const data = typeof event.body === 'string' ? JSON.parse(event.body) : event.body
 
@@ -79,3 +79,9 @@ export const handler = async (event) => {
     return error(err.message || 'Lỗi máy chủ khi lưu metadata', 500)
   }
 }
+
+// Áp dụng middleware auth và RBAC
+const authHandler = withAuth(handler)
+const authAndRoleHandler = requireRole('Student')(authHandler)
+
+export const handler = authAndRoleHandler

@@ -2,10 +2,11 @@
 import { QueryCommand } from '@aws-sdk/lib-dynamodb'
 import { docClient } from '../../common/dynamodb'
 import { success, error } from '../../common/response'
+import { withAuth, requireRole } from '../../common/authMiddleware'
 
 const DOCUMENTS_TABLE = process.env.DOCUMENTS_TABLE || 'StudentDocuments'
 
-export const handler = async (event) => {
+const handler = async (event) => {
   try {
     // Extract studentId from path parameters (based on new endpoint: /students/{studentId}/documents)
     let studentId = event.pathParameters?.studentId
@@ -42,3 +43,9 @@ export const handler = async (event) => {
     return error(err.message || 'Lỗi máy chủ khi lấy tài liệu', 500)
   }
 }
+
+// Áp dụng middleware auth và RBAC
+const authHandler = withAuth(handler)
+const authAndRoleHandler = requireRole('Student')(authHandler)
+
+export const handler = authAndRoleHandler
