@@ -74,7 +74,7 @@ export default function StudentDetail() {
         </div>
         <div className="page-actions">
           <Link to={`/students/${id}/edit`} className="btn btn-primary"><Pencil size={16} /> Sửa thông tin</Link>
-          <Link to="/documents/upload" className="btn btn-secondary"><Upload size={16} /> Upload hồ sơ</Link>
+          <Link to={`/students/${id}/documents`} className="btn btn-secondary"><Upload size={16} /> Quản lý hồ sơ</Link>
         </div>
       </div>
 

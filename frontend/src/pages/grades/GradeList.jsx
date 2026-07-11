@@ -5,8 +5,12 @@ import { Plus, Eye, Pencil, Trash2, Search } from 'lucide-react'
 import Layout from '../../components/Layout'
 import ConfirmModal from '../../components/ConfirmModal'
 import { getGrades, deleteGrade } from '../../services/gradeService'
+import { getUserRole } from '../../services/authService'
 
 export default function GradeList() {
+  const role = getUserRole() || 'Student'
+  const isTeacherOrStaff = role === 'Staff' || role === 'Teacher'
+
   const [grades, setGrades] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -50,7 +54,9 @@ export default function GradeList() {
           <h1 className="page-title">Điểm số</h1>
           <p className="page-description">Quản lý điểm của sinh viên.</p>
         </div>
-        <Link to="/grades/new" className="btn btn-primary"><Plus size={16} /> Thêm điểm</Link>
+        {isTeacherOrStaff && (
+          <Link to="/grades/new" className="btn btn-primary"><Plus size={16} /> Thêm điểm</Link>
+        )}
       </div>
 
       <div className="toolbar">
@@ -81,8 +87,12 @@ export default function GradeList() {
                   <td>
                     <div className="table-actions">
                       <Link to={`/grades/${g.id}`} className="btn btn-secondary btn-icon" title="Xem"><Eye size={16} /></Link>
-                      <Link to={`/grades/${g.id}/edit`} className="btn btn-secondary btn-icon" title="Sửa"><Pencil size={16} /></Link>
-                      <button className="btn btn-danger btn-icon" title="Xóa" onClick={() => setToDelete(g)}><Trash2 size={16} /></button>
+                      {isTeacherOrStaff && (
+                        <>
+                          <Link to={`/grades/${g.id}/edit`} className="btn btn-secondary btn-icon" title="Sửa"><Pencil size={16} /></Link>
+                          <button className="btn btn-danger btn-icon" title="Xóa" onClick={() => setToDelete(g)}><Trash2 size={16} /></button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

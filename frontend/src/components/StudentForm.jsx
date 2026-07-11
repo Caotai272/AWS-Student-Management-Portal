@@ -1,4 +1,6 @@
 // src/components/StudentForm.jsx
+import { getUserRole } from '../services/authService'
+
 const GENDERS = ['Male', 'Female', 'Other']
 const STATUSES = [
   { value: 'Active', label: 'Đang học' },
@@ -8,6 +10,19 @@ const STATUSES = [
 ]
 
 export default function StudentForm({ formData, onChange, onSubmit, onCancel, errors = {}, submitText = 'Lưu', loading = false, readOnlyId = false }) {
+  const role = getUserRole() || 'Student'
+  const isAdmin = role === 'Admin'
+  const isStudent = role === 'Student'
+
+  const disableId = readOnlyId || !isAdmin
+  const disableFullName = isStudent
+  const disableEmail = !isAdmin // Chỉ Admin mới được đổi email đăng nhập
+  const disableGender = isStudent
+  const disableDob = isStudent
+  const disableMajor = isStudent
+  const disableClass = isStudent
+  const disableStatus = !isAdmin // Chỉ Admin mới được đổi trạng thái học tập
+
   const handleChange = (e) => {
     const { name, value } = e.target
     onChange({ ...formData, [name]: value })
@@ -26,7 +41,8 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
             value={formData.studentId || ''}
             onChange={handleChange}
             placeholder="SV001"
-            readOnly={readOnlyId}
+            readOnly={disableId}
+            disabled={disableId}
           />
           {errors.studentId && <span className="form-error">{errors.studentId}</span>}
         </div>
@@ -39,6 +55,8 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
             value={formData.fullName || ''}
             onChange={handleChange}
             placeholder="Nguyen Van A"
+            readOnly={disableFullName}
+            disabled={disableFullName}
           />
           {errors.fullName && <span className="form-error">{errors.fullName}</span>}
         </div>
@@ -52,6 +70,8 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
             value={formData.email || ''}
             onChange={handleChange}
             placeholder="student@example.com"
+            readOnly={disableEmail}
+            disabled={disableEmail}
           />
           {errors.email && <span className="form-error">{errors.email}</span>}
         </div>
@@ -70,7 +90,13 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
 
         <div className="form-group">
           <label className="form-label">Giới tính</label>
-          <select className="form-select" name="gender" value={formData.gender || ''} onChange={handleChange}>
+          <select 
+            className="form-select" 
+            name="gender" 
+            value={formData.gender || ''} 
+            onChange={handleChange}
+            disabled={disableGender}
+          >
             <option value="">-- Chọn --</option>
             {GENDERS.map((g) => (
               <option key={g} value={g}>{g}</option>
@@ -86,6 +112,8 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
             type="date"
             value={formData.dateOfBirth || ''}
             onChange={handleChange}
+            readOnly={disableDob}
+            disabled={disableDob}
           />
         </div>
 
@@ -97,6 +125,8 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
             value={formData.major || ''}
             onChange={handleChange}
             placeholder="Information Technology"
+            readOnly={disableMajor}
+            disabled={disableMajor}
           />
           {errors.major && <span className="form-error">{errors.major}</span>}
         </div>
@@ -109,13 +139,21 @@ export default function StudentForm({ formData, onChange, onSubmit, onCancel, er
             value={formData.className || ''}
             onChange={handleChange}
             placeholder="IT01"
+            readOnly={disableClass}
+            disabled={disableClass}
           />
           {errors.className && <span className="form-error">{errors.className}</span>}
         </div>
 
         <div className="form-group">
           <label className="form-label">Trạng thái *</label>
-          <select className="form-select" name="status" value={formData.status || 'Active'} onChange={handleChange}>
+          <select 
+            className="form-select" 
+            name="status" 
+            value={formData.status || 'Active'} 
+            onChange={handleChange}
+            disabled={disableStatus}
+          >
             {STATUSES.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}

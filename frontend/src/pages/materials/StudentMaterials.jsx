@@ -1,11 +1,14 @@
 // src/pages/materials/StudentMaterials.jsx
 import { useEffect, useState } from 'react'
-import { Download, FileText } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Download, FileText, Plus } from 'lucide-react'
 import Layout from '../../components/Layout'
 import { getMaterials } from '../../services/materialService'
+import { getUserRole } from '../../services/authService'
 
 const TYPE_LABEL = {
   slide: 'Slide bài giảng',
+  type: 'Slide bài giảng',
   exercise: 'Bài tập',
   exam: 'Đề thi',
   reference: 'Tài liệu tham khảo',
@@ -16,6 +19,8 @@ const TYPE_LABEL = {
 export default function StudentMaterials() {
   const [materials, setMaterials] = useState([])
   const [loading, setLoading] = useState(true)
+  const role = getUserRole() || 'Student'
+  const isTeacherOrStaff = role === 'Staff' || role === 'Teacher'
 
   useEffect(() => {
     getMaterials()
@@ -31,6 +36,11 @@ export default function StudentMaterials() {
           <h1 className="page-title">Tài liệu học tập</h1>
           <p className="page-description">Xem và tải tài liệu do giáo viên đăng tải.</p>
         </div>
+        {isTeacherOrStaff && (
+          <Link to="/materials/upload" className="btn btn-primary">
+            <Plus size={16} /> Đăng tài liệu
+          </Link>
+        )}
       </div>
 
       {loading ? (
