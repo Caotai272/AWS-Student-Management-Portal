@@ -1,13 +1,11 @@
 // src/pages/StudentList.jsx
-// Xóa backend.mock import
-// Xóa backend.mock!
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, Plus, Eye, Pencil, Trash2 } from 'lucide-react'
 import Layout from '../../components/Layout'
 import StatusBadge from '../../components/StatusBadge'
 import ConfirmModal from '../../components/ConfirmModal'
-import { getStudents, deleteStudent } from '../../services/testStudentService'
+import { getStudents, deleteStudent } from '../../services/studentService'
 
 const STATUS_FILTERS = ['All', 'Active', 'Inactive', 'Graduated', 'Warning']
 
@@ -22,17 +20,17 @@ export default function StudentList() {
 
   const load = async () => {
     setLoading(true)
-    try {
-      // Gọi backend real API thay vì mock
-      const api = await import('../../services/api')
-      // Đơn giản với: tham chiếu cái // thực sự import thông qua một thao tác nhỏ
-      setStudents(prev => []) // sẽ được cập nhật từ api call thực sự
-    } catch(err) {}
+    setError('')
     try {
       const res = await getStudents()
       setStudents(res.data.students || res.data || [])
     } catch (err) {
-      setError('Không thể tải danh sách sinh viên.')
+      console.error('Error loading students:', err)
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Bạn không có quyền truy cập danh sách sinh viên. Vui lòng đăng nhập lại.')
+      } else {
+        setError('Không thể tải danh sách sinh viên. Vui lòng thử lại sau.')
+      }
     } finally {
       setLoading(false)
     }
@@ -56,10 +54,12 @@ export default function StudentList() {
   const confirmDelete = async () => {
     setDeleting(true)
     try {
-      // Sử dụng backend thực sự (sau khi fix auth)
       await deleteStudent(toDelete.id || toDelete.studentId)
       setToDelete(null)
       load()
+    } catch (err) {
+      console.error('Error deleting student:', err)
+      setError('Không thể xóa sinh viên. Vui lòng thử lại.')
     } finally {
       setDeleting(false)
     }
