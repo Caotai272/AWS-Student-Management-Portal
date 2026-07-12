@@ -1,469 +1,152 @@
-# Hướng Dẫn Khởi Chạy Dự Án AWS Student Management Portal
+# Hướng Dẫn Cấu Hình và Chạy Frontend Sau Khi Lấy Code Từ GitHub
 
-## Mục Lục
-1. [Tổng Quan Kiến Trúc](#1-tổng-quan-kiến-trúc)
-2. [Môi Trường Cần Cài Đặt](#2-môi-trường-cần-cài-đặt)
-3. [Cài Đặt Môi Trường](#3-cài-đặt-môi-trường)
-4. [Thứ Tự Setup Các Dịch Vụ AWS](#4-thứ-tự-setup-các-dịch-vụ-aws)
-5. [Cấu Hình Chi Tiết Từng Bước](#5-cấu-hình-chi-tiết-từng-bước)
-6. [Chạy Frontend](#6-chạy-frontend)
-7. [Kiểm Tra & Xác Minh](#7-kiểm-tra--xác-minh)
+Tài liệu này hướng dẫn chi tiết các bước cài đặt môi trường, cấu hình dịch vụ AWS và khởi chạy **Frontend** của dự án **AWS Student Management Portal** sau khi bạn nhân bản (clone) mã nguồn từ GitHub về máy tính cá nhân.
 
 ---
 
-## 1. Tổng Quan Kiến Trúc
+## 1. Yêu Cầu Hệ Thống & Công Cụ Cần Cài Đặt
 
-Dự án sử dụng kiến trúc **Serverless** trên AWS:
+Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
 
-```
-Người dùng (Browser)
-      │
-      ▼
-┌─────────────────────┐
-│  Frontend (ReactJS)  │  React + Vite
-└─────────┬───────────┘
-          │ HTTPS (Cognito JWT)
-          ▼
-┌─────────────────────┐
-│  Amazon Cognito     │  Xác thực / Đăng nhập
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│  API Gateway (REST) │  Điều hướng request
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│  AWS Lambda         │  Backend logic (Node.js)
-└───┬───────────┬─────┘
-    │           │
-    ▼           ▼
-┌────────────┐ ┌────────────┐
-│ DynamoDB   │ │ S3         │
-└────────────┘ └─────┬──────┘
-                     │
-                     ▼
-              ┌────────────┐
-              │ SQS        │  Queue thông báo
-              └─────┬──────┘
-                    │
-                    ▼
-              ┌────────────┐
-              │ SES        │  Gửi email
-              └────────────┘
-```
+### 1.1 Node.js & npm (Môi trường chạy React/Vite)
+* **Node.js**: Phiên bản `>= 18.x` (Khuyến nghị dùng bản LTS mới nhất như 20.x).
+* **npm**: Phiên bản `>= 9.x` (Tự động cài đặt đi kèm Node.js).
+* **Kiểm tra phiên bản đã cài**:
+  ```bash
+  node -v
+  npm -v
+  ```
+
+### 1.2 AWS CLI (Công cụ dòng lệnh AWS - Cần khi deploy lên S3/CloudFront)
+* Tải xuống và cài đặt từ trang chủ AWS:
+  * **Windows**: Tải file cài đặt [AWS CLI MSI Installer](https://awscli.amazonaws.com/AWSCLIV2.msi).
+* **Kiểm tra phiên bản đã cài**:
+  ```bash
+  aws --version
+  ```
 
 ---
 
-## 2. Môi Trường Cần Cài Đặt
+## 2. Các Bước Cấu Hình và Chạy Local Frontend
 
-### 2.1 Node.js (Runtime)
+Sau khi lấy mã nguồn về từ GitHub, bạn thực hiện các bước sau để kết nối và khởi chạy ở local:
 
-| Thành phần | Phiên bản yêu cầu | Mục đích |
-|-----------|-------------------|----------|
-| **Node.js** | >= 18.x | Chạy backend Lambda, build frontend |
-| **npm** | >= 9.x | Quản lý package |
-
-**Kiểm tra:**
+### Bước 1: Cài đặt các thư viện phụ thuộc (Dependencies)
+Mở cửa sổ terminal, di chuyển vào thư mục `frontend` của dự án và chạy lệnh:
 ```bash
-node --version
-npm --version
-```
-
-### 2.2 Python (Cần cho script deploy)
-
-| Thành phần | Phiên bản yêu cầu | Mục đích |
-|-----------|-------------------|----------|
-| **Python** | 3.8+ | Đóng gói Lambda (fallback 7z) |
-| **pip** | latest | Quản lý Python packages |
-
-### 2.3 AWS CLI
-
-| Thành phần | Phiên bản yêu cầu | Mục đích |
-|-----------|-------------------|----------|
-| **AWS CLI v2** | >= 2.0 | Quản lý tài nguyên AWS |
-
-**Kiểm tra:**
-```bash
-aws --version
-```
-
-### 2.4 Git
-
-| Thành phần | Phiên bản yêu cầu | Mục đích |
-|-----------|-------------------|----------|
-| **Git** | >= 2.30 | Version control |
-
-### 2.5 Các Công Cụ Bổ Sung (Tùy chọn)
-
-| Thành phần | Mục đích |
-|-----------|----------|
-| **7-Zip** | Nén Lambda package (Windows) |
-| **Postman** | Test API |
-| **Git Bash** | Chạy shell script |
-
----
-
-## 3. Cài Đặt Môi Trường
-
-### 3.1 Cài Đặt Node.js
-
-**Windows:**
-1. Download từ https://nodejs.org/
-2. Chọn phiên bản LTS (18.x hoặc 20.x)
-3. Cài đặt, tick chọn "Add to PATH"
-4. Kiểm tra:
-```bash
-node --version
-npm --version
-```
-
-### 3.2 Cài Đặt Python
-
-**Windows:**
-1. Download từ https://www.python.org/downloads/
-2. Chọn Python 3.8+
-3. **Quan trọng:** Tick "Add Python to PATH"
-4. Kiểm tra:
-```bash
-python --version
-pip --version
-```
-
-### 3.3 Cài Đặt AWS CLI v2
-
-**Windows (MSI Installer):**
-1. Download: https://awscli.amazonaws.com/AWSCLIV2.msi
-2. Cài đặt
-3. Kiểm tra:
-```bash
-aws --version
-```
-
-**Hoặc qua pip:**
-```bash
-pip install awscli
-```
-
-### 3.4 Cấu Hình AWS Credentials
-
-1. Đăng nhập AWS Console: https://console.aws.amazon.com/
-2. Vào **IAM** → **Users** → Chọn user của bạn
-3. Vào tab **Security credentials**
-4. Tạo **Access Key** mới
-5. Cấu hình AWS CLI:
-```bash
-aws configure
-# AWS Access Key ID: [Nhập Access Key]
-# AWS Secret Access Key: [Nhập Secret Key]
-# Default region name: us-east-1
-# Default output format: json
-```
-
-**Xác minh credentials:**
-```bash
-aws sts get-caller-identity
-```
-
-### 3.5 Cài Đặt Git Bash (Windows)
-
-Download từ https://git-scm.com/download/win
-
-Đảm bảo chọn **"Use Git and optional Unix tools from Windows Command Prompt"**
-
----
-
-## 4. Thứ Tự Setup Các Dịch Vụ AWS
-
-**Thứ tự bắt buộc:**
-
-```
-1. Cài đặt môi trường phát triển
-         ↓
-2. Cài đặt npm packages (backend + frontend)
-         ↓
-3. Setup Infrastructure (setup-infra.sh)
-   ├── Tạo IAM Role cho Lambda
-   ├── Tạo S3 Bucket
-   ├── Tạo SQS Queue
-   └── Tạo DynamoDB Tables
-         ↓
-4. Setup Cognito (setup-cognito.sh)
-   ├── Tạo User Pool
-   └── Tạo App Client
-         ↓
-5. Deploy Lambdas (deploy-lambdas.sh)
-   ├── Đóng gói code
-   └── Deploy lên AWS
-         ↓
-6. Deploy API Gateway (deploy-apigateway.sh)
-   ├── Tạo REST API
-   ├── Cấu hình Cognito Authorizer
-   └── Liên kết Lambda functions
-         ↓
-7. Cấu hình Frontend
-         ↓
-8. Chạy & Kiểm tra
-```
-
----
-
-## 5. Cấu Hình Chi Tiết Từng Bước
-
-### Bước 1: Cài Đặt npm Packages
-
-```bash
-# Di chuyển vào thư mục dự án
-cd "E:\INTERN AWS\Doan\AWS-Student-Management-Portal"
-
-# Cài đặt backend dependencies
-cd backend
-npm install
-
-# Cài đặt frontend dependencies (mở terminal mới)
 cd frontend
 npm install
 ```
 
-### Bước 2: Setup Infrastructure
+### Bước 2: Tạo và cấu hình file môi trường `.env`
+Tạo một tệp tin mới có tên là `.env` nằm trực tiếp trong thư mục `frontend` (`frontend/.env`). Cấu hình các thông số kết nối tới AWS theo thông tin hệ thống đã triển khai như sau:
 
-Script này sẽ tạo:
-- IAM Role `student-portal-lambda`
-- S3 Bucket `student-documents-[ACCOUNT_ID]`
-- SQS Queue `student-notifications`
-- DynamoDB Tables (Students, Documents, Teachers, Grades, Materials)
-
-```bash
-cd "E:\INTERN AWS\Doan\AWS-Student-Management-Portal"
-
-# Chạy script setup infrastructure
-bash scripts/setup-infra.sh us-east-1
-```
-
-**Lưu lại các giá trị output:**
-```
-LAMBDA_ROLE_ARN=arn:aws:iam::123456789:role/student-portal-lambda
-DOCUMENTS_BUCKET=student-documents-123456789
-NOTIFICATION_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789/student-notifications
-FROM_EMAIL=noreply@example.com
-```
-
-### Bước 3: Setup Cognito
-
-```bash
-cd "E:\INTERN AWS\Doan\AWS-Student-Management-Portal"
-
-# Tạo User Pool và App Client
-bash scripts/setup-cognito.sh us-east-1
-```
-
-**Lưu lại các giá trị output:**
-```
-UserPoolId = us-east-1_xxxxxxxxx
-AppClientId = xxxxxxxxxxxxxxxxxx
-```
-
-**Tạo user demo:**
-```bash
-# Sau khi chạy script, user admin sẽ được tạo
-# Username: admin@example.com
-# Password tạm: Abc12345!
-# (Đăng nhập lần đầu sẽ bắt đổi mật khẩu)
-```
-
-### Bước 4: Deploy Lambda Functions
-
-```bash
-cd "E:\INTERN AWS\Doan\AWS-Student-Management-Portal"
-
-# Deploy tất cả Lambda functions
-LAMBDA_ROLE_ARN=arn:aws:iam::123456789:role/student-portal-lambda \
-DOCUMENTS_BUCKET=student-documents-123456789 \
-NOTIFICATION_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789/student-notifications \
-FROM_EMAIL=noreply@example.com \
-bash scripts/deploy-lambdas.sh us-east-1
-```
-
-**Các Lambda functions được deploy:**
-| Module | Function | Mục đích |
-|--------|----------|----------|
-| students | createStudent | Tạo sinh viên |
-| students | getStudents | Lấy danh sách sinh viên |
-| students | getStudentById | Lấy sinh viên theo ID |
-| students | updateStudent | Cập nhật sinh viên |
-| students | deleteStudent | Xóa sinh viên |
-| documents | docUploadUrl | Tạo presigned URL upload |
-| documents | docSaveMetadata | Lưu metadata tài liệu |
-| teachers | createTeacher | Tạo giáo viên |
-| teachers | getTeachers | Lấy danh sách giáo viên |
-| teachers | getTeacherById | Lấy giáo viên theo ID |
-| teachers | updateTeacher | Cập nhật giáo viên |
-| teachers | deleteTeacher | Xóa giáo viên |
-| grades | createGrade | Tạo điểm |
-| grades | getGrades | Lấy danh sách điểm |
-| grades | getGradeById | Lấy điểm theo ID |
-| grades | updateGrade | Cập nhật điểm |
-| grades | deleteGrade | Xóa điểm |
-| materials | materialUploadUrl | Tạo presigned URL tài liệu học |
-| materials | materialSaveMetadata | Lưu metadata tài liệu học |
-| materials | getMaterials | Lấy danh sách tài liệu học |
-| notifications | sendEmailWorker | Worker gửi email |
-
-### Bước 5: Deploy API Gateway
-
-```bash
-cd "E:\INTERN AWS\Doan\AWS-Student-Management-Portal"
-
-# Deploy API Gateway với User Pool ID
-USER_POOL_ID=us-east-1_xxxxxxxxx \
-bash scripts/deploy-apigateway.sh us-east-1
-```
-
-**Lưu lại các giá trị output:**
-```
-API ID = xxxxxxxxxxx
-Invoke URL = https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
-```
-
-### Bước 6: Cấu Hình Frontend
-
-Tạo file `frontend/.env`:
-```bash
-# Di chuyển vào thư mục frontend
-cd frontend
-
-# Tạo file .env (copy từ .env.example nếu có)
-```
-
-Nội dung `frontend/.env`:
 ```env
 # AWS Cognito Configuration
-VITE_USER_POOL_ID=us-east-1_xxxxxxxxx
-VITE_APP_CLIENT_ID=xxxxxxxxxxxxxxxxxx
+VITE_COGNITO_USER_POOL_ID=us-east-1_7SwNQ0qYm
+VITE_COGNITO_CLIENT_ID=6o5g3hcus9ehbmk90acqeuplau
 
-# API Endpoint
-VITE_API_ENDPOINT=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
+# API Gateway Endpoint (URL API Backend thực tế đã triển khai)
+VITE_API_ENDPOINT=https://9k9i3ukwdh.execute-api.us-east-1.amazonaws.com/prod
 
 # AWS Region
 VITE_AWS_REGION=us-east-1
+
+# App Configuration
+VITE_APP_NAME=AWS Student Management Portal
+VITE_APP_VERSION=1.0.0
+VITE_ENABLE_NOTIFICATIONS=true
+VITE_ENABLE_FILE_UPLOAD=true
 ```
 
----
+> [!IMPORTANT]
+> Toàn bộ các biến cấu hình sử dụng trong React thông qua Vite phải bắt đầu bằng tiền tố `VITE_`. Nếu đặt tên biến thiếu tiền tố này, ứng dụng sẽ không đọc được giá trị và không thể kết nối tới các dịch vụ AWS.
 
-## 6. Chạy Frontend
-
-### Chế độ Development:
+### Bước 3: Khởi chạy local server
+Khởi động ứng dụng React bằng lệnh:
 ```bash
-cd frontend
 npm run dev
 ```
-Frontend sẽ chạy tại http://localhost:5173
-
-### Build Production:
-```bash
-cd frontend
-npm run build
-```
+Ứng dụng sẽ được khởi tạo tại địa chỉ mặc định: `http://localhost:5173` (hoặc cổng khác tuỳ cấu hình hiển thị trên terminal). Mở trình duyệt truy cập link trên để kiểm tra kết nối.
 
 ---
 
-## 7. Kiểm Tra & Xác Minh
+## 3. Cấu Hình AWS CLI Để Triển Khai (Deploy) Lên Cloud
 
-### 7.1 Kiểm Tra AWS Resources
+Khi bạn thực hiện chỉnh sửa code ở local và muốn deploy bản build mới lên môi trường cloud (để cập nhật trang **https://d3th0yl82lu593.cloudfront.net**), thực hiện cấu hình AWS CLI như sau:
 
+### Bước 1: Cấu hình thông tin xác thực AWS Credentials
+Chạy lệnh sau trên terminal của máy tính:
 ```bash
-# Kiểm tra Lambda functions
-aws lambda list-functions --region us-east-1
-
-# Kiểm tra DynamoDB tables
-aws dynamodb list-tables --region us-east-1
-
-# Kiểm tra S3 bucket
-aws s3 ls
-
-# Kiểm tra SQS queue
-aws sqs list-queues --region us-east-1
-
-# Kiểm tra API Gateway
-aws apigateway get-rest-apis --region us-east-1
-
-# Kiểm tra Cognito User Pool
-aws cognito-idp list-user-pools --region us-east-1
-```
-
-### 7.2 Import Postman Collection
-
-1. Mở Postman
-2. Import file: `postman/student-management-api.postman_collection.json`
-3. Cập nhật biến môi trường:
-   - `baseUrl`: https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
-   - `idToken`: [Lấy từ Cognito sau khi đăng nhập]
-
-### 7.3 Xử Lý Lỗi Thường Gặp
-
-#### Lỗi "Credentials not found"
-```bash
-# Kiểm tra AWS credentials
 aws configure
+```
+Hệ thống sẽ yêu cầu nhập các thông tin:
+1. **AWS Access Key ID**: Nhập Access Key từ IAM User của bạn (được cấp quyền quản lý S3 và CloudFront).
+2. **AWS Secret Access Key**: Nhập Secret Key tương ứng.
+3. **Default region name**: `us-east-1` (hoặc region mà bạn deploy hạ tầng).
+4. **Default output format**: `json`
+
+**Xác minh thông tin kết nối AWS thành công**:
+```bash
 aws sts get-caller-identity
 ```
+Nếu hiện thông tin `Account` và `Arn` của User, chứng tỏ bạn đã đăng nhập thành công.
 
-#### Lỗi "Function not found" khi deploy Lambda
+### Bước 2: Build mã nguồn cho Production
+Trước khi deploy, biên dịch toàn bộ source code của Frontend:
 ```bash
-# Kiểm tra IAM role đã được tạo chưa
-aws iam get-role --role-name student-portal-lambda
-
-# Kiểm tra Lambda functions
-aws lambda list-functions --region us-east-1
+npm run build
 ```
+Thư mục chứa bản build đóng gói là `frontend/dist` sẽ được sinh ra.
 
-#### Lỗi "Access Denied" khi gọi API
-1. Kiểm tra Cognito User Pool đã được liên kết với API Gateway
-2. Kiểm tra Lambda function có quyền invoke từ API Gateway
-3. Kiểm tra user đã được xác thực chưa
+### Bước 3: Đồng bộ lên S3 và refresh CloudFront
+Chạy các lệnh AWS CLI từ thư mục `frontend` để triển khai:
 
-#### Lỗi "Region mismatch"
-Đảm bảo tất cả services cùng region:
-- Lambda: us-east-1
-- API Gateway: us-east-1
-- Cognito: us-east-1
-- DynamoDB: us-east-1
-- S3: us-east-1
-- SQS: us-east-1
+1. **Đồng bộ hóa thư mục dist lên S3 bucket của frontend**:
+   ```bash
+   aws s3 sync dist/ s3://student-portal-frontend-147997148454 --delete
+   ```
+   *(Lệnh này sẽ upload tệp mới lên S3 và xóa các tệp cũ không còn sử dụng trên bucket)*
 
----
-
-## Quick Reference
-
-### Các Biến Môi Trường Quan Trọng
-
-| Biến | Mô tả |
-|------|-------|
-| `LAMBDA_ROLE_ARN` | ARN của IAM role cho Lambda |
-| `DOCUMENTS_BUCKET` | Tên S3 bucket lưu tài liệu |
-| `NOTIFICATION_QUEUE_URL` | URL của SQS queue thông báo |
-| `FROM_EMAIL` | Email gửi thông báo |
-| `USER_POOL_ID` | ID của Cognito User Pool |
-| `APP_CLIENT_ID` | ID của Cognito App Client |
-| `API_ID` | ID của API Gateway |
-| `VITE_API_ENDPOINT` | URL của API Gateway |
-
-### Các Scripts
-
-| Script | Mục đích |
-|--------|----------|
-| `scripts/setup-infra.sh` | Tạo hạ tầng (IAM, S3, SQS, DynamoDB) |
-| `scripts/setup-cognito.sh` | Tạo Cognito User Pool |
-| `scripts/deploy-lambdas.sh` | Deploy tất cả Lambda functions |
-| `scripts/deploy-apigateway.sh` | Deploy API Gateway |
-| `scripts/deploy-dynamodb.sh` | Tạo DynamoDB tables |
+2. **Xóa bộ nhớ đệm (Invalidation) trên CloudFront để cập nhật ngay cho người dùng**:
+   ```bash
+   aws cloudfront create-invalidation --distribution-id E39TFB7INWHA6Y --paths "/*"
+   ```
+   *(Thay đổi `E39TFB7INWHA6Y` bằng CloudFront Distribution ID tương ứng với trang web của bạn)*
 
 ---
 
-## Liên Hệ Hỗ Trợ
+## 4. Cách Tra Cứu Thông Tin Dịch Vụ AWS Trên AWS Console (Khi deploy mới)
 
-Nếu gặp lỗi, kiểm tra:
-1. AWS Console CloudWatch Logs cho Lambda errors
-2. AWS Console API Gateway → Stages → Logs
-3. Kiểm tra Network tab trong browser DevTools
+Nếu bạn triển khai một hệ thống backend mới trên AWS và cần lấy thông tin cấu hình cho file `.env`, hãy làm theo hướng dẫn sau:
+
+### 4.1 Lấy thông tin Cognito User Pool & App Client ID
+1. Truy cập [AWS Management Console](https://console.aws.amazon.com/).
+2. Tìm dịch vụ **Cognito** → Chọn mục **User Pools**.
+3. Chọn User Pool tương ứng với dự án của bạn (ví dụ: `User pool - r8hpjb`).
+4. **UserPool ID**: Copy mã ID ở ngay phần đầu trang thông tin (dạng `us-east-1_xxxxxxxxx`).
+5. **App Client ID**: Di chuyển sang tab **App integration** → Cuộn xuống dưới cùng tại phần **App client list** → Copy chuỗi ký tự **Client ID** của App Client.
+
+### 4.2 Lấy thông tin Endpoint API Gateway
+1. Tìm kiếm dịch vụ **API Gateway** trên AWS Console.
+2. Chọn REST API của dự án (ví dụ: `student-portal-api`).
+3. Click vào mục **Stages** ở menu bên trái → Chọn Stage đang chạy (ví dụ: `prod`).
+4. **Invoke URL**: Copy đường dẫn URL hiển thị ở trên cùng (dạng `https://xxxxxx.execute-api.us-east-1.amazonaws.com/prod`).
+
+### 4.3 Lấy CloudFront Distribution ID & S3 Bucket Name
+1. Tìm kiếm dịch vụ **CloudFront** trên AWS Console.
+2. Tìm Distribution tương ứng với domain trang web của bạn (`d3th0yl82lu593.cloudfront.net`).
+3. **Distribution ID**: Lấy ở cột **ID** của bảng danh sách (ví dụ: `E39TFB7INWHA6Y`).
+4. **S3 Bucket**: Chuyển sang tab **Origins** của Distribution đó để xem chính xác tên S3 Bucket nguồn (ví dụ: `student-portal-frontend-147997148454.s3.amazonaws.com` -> Tên bucket là `student-portal-frontend-147997148454`).
+
+---
+
+## 5. Xử Lý Các Sự Cố Thường Gặp (Troubleshooting)
+
+* **Lỗi 403 Forbidden hoặc CORS khi tương tác với API từ Local**:
+  * Kiểm tra lại file `frontend/.env` đã cấu hình đúng `VITE_API_ENDPOINT` chưa (thiếu dấu `/` ở cuối hoặc sai giao thức `https`).
+  * Đảm bảo cấu hình CORS trên API Gateway đã cho phép Domain Local của bạn (ví dụ: `http://localhost:5173`).
+* **Đăng nhập thất bại / Báo lỗi kết nối UserPool**:
+  * Kiểm tra xem các biến `VITE_COGNITO_USER_POOL_ID` và `VITE_COGNITO_CLIENT_ID` đã khớp chính xác với thông số trên AWS Console chưa.
+* **AWS CLI báo lỗi Expired Token khi deploy**:
+  * Phiên đăng nhập AWS của bạn đã hết hạn. Hãy lấy Access Key mới từ AWS IAM / AWS Academy Learner Lab và chạy lại lệnh `aws configure`.
